@@ -1,0 +1,2022 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart School Attendance System</title>
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --background: #f1f5f9;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --success: #15803d;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: var(--background);
+      color: var(--text);
+    }
+
+    .hidden { display: none !important; }
+
+    .center {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      padding: 32px;
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 10px 35px #0f172a15;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 8px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 12px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 8px 0 24px;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 7px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: white;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid var(--primary);
+      border-color: transparent;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .full {
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    .secondary { background: #475569; }
+
+    .secondary:hover:not(:disabled) {
+      background: #334155;
+    }
+
+    .message {
+      margin-top: 16px;
+      font-size: 14px;
+      min-height: 20px;
+      line-height: 1.5;
+    }
+
+    .error { color: var(--danger); }
+    .success { color: var(--success); }
+
+    .auth-message { text-align: center; }
+
+    .dashboard {
+      max-width: 1100px;
+      margin: auto;
+      padding: 28px 20px 60px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .header .subtitle { margin-bottom: 0; }
+
+    .panel {
+      padding: 24px;
+      background: var(--surface);
+      border-radius: 14px;
+      box-shadow: 0 4px 20px #0f172a0d;
+      margin-bottom: 20px;
+    }
+
+    .role {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1d4ed8;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .staff-item {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .staff-item:last-child { border-bottom: 0; }
+
+    .staff-item p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .attendance-filters {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      max-width: 480px;
+      margin-top: 14px;
+    }
+    .attendance-filters label { margin-top: 0; }
+    .attendance-filters select { min-height: 46px; }
+    .attendance-context {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .attendance-class-pill {
+      background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+      border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 700;
+    }
+    .attendance-help { color: #64748b; font-size: 13px; line-height: 1.5; }
+    .attendance-message-loading { color: #475569 !important; }
+    .attendance-message-loading::before {
+      content: ''; display: inline-block; width: 11px; height: 11px;
+      margin-right: 8px; border: 2px solid #bfdbfe;
+      border-top-color: #2563eb; border-radius: 50%;
+      animation: attendance-spin .8s linear infinite; vertical-align: -2px;
+    }
+    @keyframes attendance-spin { to { transform: rotate(360deg); } }
+
+    .attendance-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    .attendance-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 550px;
+    }
+
+    .attendance-table th,
+    .attendance-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .attendance-table th {
+      background: #f8fafc;
+      font-weight: 700;
+    }
+
+    .attendance-table select {
+      min-width: 125px;
+      padding: 9px;
+    }
+
+    .attendance-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .summary-chip {
+      background: #f1f5f9;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .summary-chip strong {
+      margin-left: 5px;
+    }
+
+    .notice {
+      background: #eff6ff;
+      color: #1e40af;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 600px) {
+      .card { padding: 24px; }
+      .dashboard { padding: 16px 12px 40px; }
+      .panel { padding: 18px; }
+
+      .attendance-filters {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .header button { width: 100%; }
+    }
+
+    /* One-tap attendance statuses */
+    .status-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+    .status-button {
+      padding: 9px 12px; border: 1px solid #cbd5e1;
+      border-radius: 8px; background: #fff; color: #334155;
+      font-size: 13px; white-space: nowrap;
+    }
+    .status-button.selected { font-weight: 700; border-width: 2px; }
+    .status-button.selected.present { background: #dcfce7; color: #15803d; border-color: #16a34a; }
+    .status-button.selected.absent { background: #fee2e2; color: #b91c1c; border-color: #dc2626; }
+    .status-button.selected.late { background: #fef3c7; color: #92400e; border-color: #d97706; }
+    .status-button:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .attendance-table { min-width: 690px; }
+
+    .review-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:end; }
+    .review-controls > div { flex:1; min-width:145px; }
+    .review-table { width:100%; border-collapse:collapse; margin-top:12px; }
+    .review-table td,.review-table th { border-bottom:1px solid var(--border); padding:10px; text-align:left; }
+    .review-table select { min-width:110px; }
+    .review-table button { padding:9px 12px; }
+
+    .analysis-stats {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+    .analysis-stat {padding:15px;background:#f8fafc;border:1px solid var(--border);border-radius:10px}
+    .analysis-stat strong {display:block;font-size:23px;margin-top:6px}
+    .analysis-table {width:100%;border-collapse:collapse;margin-top:12px}
+    .analysis-table th,.analysis-table td {padding:10px;border-bottom:1px solid var(--border);text-align:left;font-size:13px}
+    .analysis-table th {background:#f8fafc}
+    .analysis-scroll {overflow-x:auto}
+    .analysis-toolbar {display:flex;gap:12px;align-items:end;flex-wrap:wrap}
+    .analysis-toolbar label {margin:0 0 6px}
+    .analysis-toolbar select {min-width:130px}
+    @media(max-width:650px){.analysis-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+    /* Professional interface refresh — presentation only */
+    :root {--primary:#155eef;--primary-dark:#0049c6;--background:#f5f7fb;--surface:#fff;--text:#182338;--muted:#63718a;--border:#e4e9f2;}
+    html{scroll-behavior:smooth;scroll-padding-top:110px}
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;line-height:1.5;background:var(--background)}
+    .dashboard{max-width:1240px;padding:28px 28px 80px}
+    .header{background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px 24px;margin-bottom:16px;box-shadow:0 2px 12px #1d33500a}
+    .header h1{font-size:22px;letter-spacing:-.6px;margin:0 0 4px}
+    .header .subtitle{font-size:13px}
+    .panel{border:1px solid var(--border);border-radius:17px;padding:28px 30px;box-shadow:0 4px 18px #23345008;margin-bottom:18px;scroll-margin-top:105px}
+    .panel h2{font-size:19px;letter-spacing:-.4px;margin-bottom:8px}
+    .panel h3{font-size:15px;letter-spacing:-.1px;margin:28px 0 12px;padding-top:18px;border-top:1px solid var(--border)}
+    .panel .subtitle{font-size:13px;margin:5px 0 20px}
+    .role{background:#eaf2ff;color:#174bb3;letter-spacing:.4px}
+    label{font-size:12px;color:#40506a;margin:14px 0 6px}
+    input,select{border:1px solid #d7dfeb;border-radius:10px;min-height:43px;font:inherit;font-size:14px;padding:10px 12px;transition:border-color .15s,box-shadow .15s}
+    input:focus,select:focus{outline:0;border-color:#4684ff;box-shadow:0 0 0 3px #155eef1c}
+    button{border-radius:10px;padding:11px 17px;min-height:42px;font-family:inherit;font-size:13px;transition:background .15s,transform .15s,box-shadow .15s}
+    button:hover:not(:disabled){box-shadow:0 4px 12px #155eef24}
+    button:active:not(:disabled){transform:translateY(1px)}
+    button:focus-visible,a:focus-visible{outline:3px solid #8ab4ff;outline-offset:2px}
+    .secondary{background:#eef2f8;color:#33445e}.secondary:hover:not(:disabled){background:#e0e8f3}
+    .full{margin-top:16px}
+    .attendance-filters{max-width:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}
+    .attendance-table-wrapper,.analysis-scroll{border:1px solid var(--border);border-radius:12px;overflow:auto}
+    .attendance-table{min-width:650px}
+    .attendance-table th,.analysis-table th,.review-table th{background:#f5f8fc;color:#4b5b73;font-size:12px;text-transform:uppercase;letter-spacing:.35px}
+    .attendance-table td,.attendance-table th{padding:13px 15px}
+    .attendance-table tbody tr:nth-child(even){background:#fafbfd}
+    .attendance-table tbody tr:hover{background:#f2f7ff}
+    .status-button{border:1px solid #d7dfeb;background:#fff;color:#4b5b73;border-radius:9px;padding:8px 12px;min-height:36px}
+    .status-button:hover:not(:disabled){background:#edf4ff;color:#174bb3;box-shadow:none}
+    .status-button.selected{border-width:1px;box-shadow:inset 0 0 0 1px currentColor}
+    .attendance-class-pill{background:#eaf2ff;border-color:#cbdfff}
+    .summary-chip{background:#f3f6fb;border:1px solid #e6ebf3;border-radius:10px}
+    .analysis-stat{background:#f8faff;border:1px solid #e3eaf5;border-radius:12px;padding:18px}
+    .analysis-stat strong{font-size:26px;letter-spacing:-.5px}
+    .notice{background:#f0f6ff;border:1px solid #dbe9ff;border-radius:10px}
+    .staff-item{padding:15px 0}
+    .message{font-size:13px}
+    .card{border:1px solid #e5eaf3;border-radius:20px;box-shadow:0 16px 48px #1d335014;padding:36px}
+    .card h1{letter-spacing:-.6px}
+    .center{background:radial-gradient(circle at 15% 10%,#e1edff 0,transparent 42%),radial-gradient(circle at 90% 85%,#e7edfa 0,transparent 40%),#f6f8fc}
+    .app-nav{position:sticky;top:8px;z-index:20;display:flex;align-items:center;gap:7px;overflow-x:auto;padding:10px;background:#fff;border:1px solid var(--border);border-radius:14px;margin-bottom:18px;box-shadow:0 6px 24px #243f6312;scrollbar-width:thin}
+    .app-nav button{white-space:nowrap;min-height:37px;padding:8px 12px;background:transparent;color:#53637b;border-radius:8px;font-weight:600}
+    .app-nav button:hover:not(:disabled),.app-nav button.nav-active{background:#eaf2ff;color:#155eef;box-shadow:none}
+    .app-nav .nav-label{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#8a97a9;margin:0 9px 0 5px;white-space:nowrap}
+    /* Single-section workspace: preserve original hidden state for data loaders. */
+    #dashboardScreen .workspace-inactive{display:none !important}
+    #dashboardScreen #adminNavigation{display:none !important}
+    #dashboardScreen .overview-panel{display:none !important}
+    #dashboardScreen .app-nav button:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
+    #dashboardScreen .app-nav button[aria-current="page"]{background:#eaf2ff;color:#155eef}
+    .overview-panel{background:linear-gradient(115deg,#163a80,#155eef);color:#fff;border:0;position:relative;overflow:hidden}
+    .overview-panel:after{content:"";position:absolute;width:210px;height:210px;border-radius:50%;right:-70px;top:-130px;background:#ffffff12;pointer-events:none}
+    .overview-panel h2,.overview-panel .subtitle{color:#fff}
+    .overview-panel .subtitle{opacity:.85}
+    .overview-panel .role{background:#ffffff28;color:#fff;border:1px solid #ffffff40}
+    #adminNavigation{padding:18px 24px}
+    #adminNavigation h2{font-size:15px}
+    @media(max-width:700px){.dashboard{padding:12px 12px 50px}.header{padding:16px}.header h1{font-size:19px}.panel{padding:19px 17px;border-radius:14px}.attendance-filters{grid-template-columns:1fr;gap:4px}.app-nav{top:0;border-radius:10px}.analysis-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.header button{width:auto}.card{padding:25px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}button,input,select{transition:none}}
+
+    .analysis-breakdown{margin-top:24px}
+    .analysis-status{padding:13px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);margin:14px 0;font-weight:600;font-size:13px}
+    .analysis-scroll{overflow-x:auto}
+    .analysis-table{min-width:620px}
+    [data-theme="dark"] .analysis-status{background:#22334b}
+    /* Blue header and accessible light/dark appearance */
+    .header{background:linear-gradient(110deg,#123c92 0%,#155eef 70%,#337dff 100%);border:1px solid #316fe8;color:#fff;box-shadow:0 10px 28px #155eef2b}
+    .header h1,.header .subtitle{color:#fff}
+    .header .subtitle{color:#dbeafe}
+    .header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .header-actions button{min-height:39px;background:#ffffff20;color:#fff;border:1px solid #ffffff55}
+    .header-actions button:hover:not(:disabled){background:#ffffff35}
+    .theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .theme-icon{font-size:17px;line-height:1}
+    :root[data-theme="dark"]{color-scheme:dark;--primary:#5590ff;--primary-dark:#3976ed;--background:#0b1220;--surface:#182437;--text:#e8eef9;--muted:#a4b4cd;--border:#33445e}
+    [data-theme="dark"] body{background:var(--background);color:var(--text)}
+    [data-theme="dark"] .header{background:linear-gradient(110deg,#11234a,#183e85 70%,#2256ae);border-color:#2e5492}
+    [data-theme="dark"] .panel,[data-theme="dark"] .card,[data-theme="dark"] .app-nav{background:var(--surface);border-color:var(--border);color:var(--text);box-shadow:0 5px 18px #0002}
+    [data-theme="dark"] .overview-panel{background:linear-gradient(115deg,#163a80,#155eef)}
+    [data-theme="dark"] .center{background:radial-gradient(circle at 10% 10%,#172c53,transparent 44%),#0b1220}
+    [data-theme="dark"] label{color:#c5d2e6}
+    [data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:#111c2d;color:#e8eef9;border-color:#40516c;color-scheme:dark}
+    [data-theme="dark"] input::placeholder,[data-theme="dark"] textarea::placeholder{color:#9aaec8}
+    [data-theme="dark"] input:disabled,[data-theme="dark"] select:disabled{background:#1b2b40;color:#8ea1bd}
+    [data-theme="dark"] .secondary{background:#30415a;color:#e7efff}
+    [data-theme="dark"] .secondary:hover:not(:disabled){background:#405574}
+    [data-theme="dark"] .app-nav button{color:#b9c8df}
+    [data-theme="dark"] .app-nav button:hover:not(:disabled),[data-theme="dark"] .app-nav button.nav-active,[data-theme="dark"] #dashboardScreen .app-nav button[aria-current="page"]{background:#253e65;color:#9dc0ff}
+    [data-theme="dark"] .app-nav .nav-label{color:#a6b6d0}
+    [data-theme="dark"] .role,[data-theme="dark"] .attendance-class-pill{background:#263e62;color:#b8d3ff;border-color:#405d88}
+    [data-theme="dark"] .attendance-table th,[data-theme="dark"] .analysis-table th,[data-theme="dark"] .review-table th{background:#25354b;color:#c1d0e5}
+    [data-theme="dark"] .attendance-table tbody tr:nth-child(even){background:#1c2b40}
+    [data-theme="dark"] .attendance-table tbody tr:hover{background:#263c59}
+    [data-theme="dark"] .status-button{background:#23334a;color:#d4e1f4;border-color:#425572}
+    [data-theme="dark"] .status-button:hover:not(:disabled){background:#314b6e;color:#fff}
+    [data-theme="dark"] .status-button.selected.present{background:#154734;color:#b4f4d0;border-color:#3cbb83}
+    [data-theme="dark"] .status-button.selected.absent{background:#5a2630;color:#ffd1d7;border-color:#f07d8a}
+    [data-theme="dark"] .status-button.selected.late{background:#59431d;color:#ffe2a1;border-color:#d8a64d}
+    [data-theme="dark"] .analysis-stat,[data-theme="dark"] .summary-chip{background:#22334a;border-color:#3b4e69;color:#e8eef9}
+    [data-theme="dark"] .notice{background:#203754;color:#bfd9ff;border-color:#3a5678}
+    [data-theme="dark"] .staff-item{border-color:var(--border)}
+    [data-theme="dark"] .panel h2,[data-theme="dark"] .panel h3{color:var(--text)}
+    [data-theme="dark"] .overview-panel h2,[data-theme="dark"] .overview-panel .subtitle{color:#fff}
+    @media(max-width:700px){.header-actions{width:100%;justify-content:flex-start}.header-actions button{width:auto}}
+
+    /* Final demo polish */
+    .smart-spinner{width:42px;height:42px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:attendance-spin .8s linear infinite;margin:8px auto 22px}
+    .smart-section-heading{font-size:16px;margin:28px 0 12px;color:var(--text)}
+    .submission-tracker{background:var(--surface);border:1px solid var(--border);padding:20px;border-radius:14px;margin:18px 0 24px}
+    .tracker-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--text)}
+    .tracker-head span{font-size:13px;color:var(--muted)}
+    .tracker-count{font-size:13px;color:var(--muted);margin:12px 0}
+    .tracker-progress{height:10px;background:var(--border);border-radius:20px;overflow:hidden}
+    .tracker-progress-bar{height:100%;background:var(--primary);border-radius:20px;transition:width .3s}
+    .tracker-details{margin-top:16px;color:var(--text)}.tracker-details summary{cursor:pointer;font-weight:600;font-size:13px}
+    .tracker-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.tracker-chip{padding:6px 11px;border-radius:8px;background:#fff2d9;color:#88580b;border:1px solid #e8c88d;font-size:12px;font-weight:700}
+    .staff-card{padding:16px;border:1px solid var(--border);border-radius:12px;margin:10px 0}.staff-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .staff-status{font-size:12px;border-radius:30px;padding:5px 10px}.staff-status.active{background:#d9fbe7;color:#166534}.staff-status.inactive{background:#f1f5f9;color:#475569}
+    .staff-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.staff-action{padding:8px 12px;min-height:34px;font-size:12px;background:var(--primary)}
+    .staff-action.toggle{background:#475569}.staff-action.archive{background:#b42318}.staff-busy{opacity:.5;pointer-events:none}
+    [data-theme="dark"] .submission-tracker{background:#22334b}[data-theme="dark"] .tracker-chip{background:#514121;color:#ffe0a1;border-color:#806637}
+    [data-theme="dark"] .staff-status.active{background:#164e36;color:#bbf7d0}[data-theme="dark"] .staff-status.inactive{background:#334155;color:#cbd5e1}
+    
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <section id="loginScreen" class="center">
+    <main class="card">
+      <h1>Smart School Attendance</h1>
+      <p class="subtitle">Sign in to your account</p>
+
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          autocomplete="username"
+          required
+        >
+
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button id="loginButton" class="full" type="submit">
+          Sign In
+        </button>
+      </form>
+
+      <p id="loginMessage"
+         class="message auth-message"
+         role="alert"></p>
+    </main>
+  </section>
+
+  <section id="preparingScreen" class="center hidden" aria-live="polite"><main class="card" style="text-align:center"><div class="smart-spinner" aria-hidden="true"></div><h2>Preparing your dashboard</h2><p class="subtitle" style="margin-bottom:0">Signing you in securely…</p></main></section>
+  <!-- PASSWORD CHANGE SCREEN -->
+  <section id="changeScreen" class="center hidden">
+    <main class="card">
+      <h2>Change Your Password</h2>
+      <p class="subtitle">
+        Change your temporary password before continuing.
+      </p>
+
+      <form id="changeForm">
+        <label for="currentPassword">Current Password</label>
+        <input
+          id="currentPassword"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+
+        <label for="newPassword">New Password</label>
+        <input
+          id="newPassword"
+          type="password"
+          autocomplete="new-password"
+          minlength="14"
+          maxlength="256"
+          required
+        >
+
+        <label for="confirmPassword">Confirm New Password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          autocomplete="new-password"
+          minlength="14"
+          maxlength="256"
+          required
+        >
+
+        <button id="changeButton" class="full" type="submit">
+          Update Password
+        </button>
+      </form>
+
+      <p id="changeMessage"
+         class="message auth-message"
+         role="alert"></p>
+
+      <button id="changeLogout"
+              class="secondary full"
+              type="button">
+        Back to Login
+      </button>
+    </main>
+  </section>
+
+  <!-- DASHBOARD SCREEN -->
+  <section id="dashboardScreen" class="dashboard hidden">
+
+    <header class="header">
+      <div>
+        <h1>Smart School Attendance</h1>
+        <p id="welcomeText" class="subtitle"></p>
+      </div>
+
+      <div class="header-actions">
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☾</span><span id="themeToggleText">Dark mode</span></button>
+        <button id="logoutButton" class="secondary" type="button">Logout</button>
+      </div>
+    </header>
+
+    <nav id="appQuickNav" class="app-nav" aria-label="Application sections">
+      <span class="nav-label">Workspace</span>
+      <button type="button" data-target="analysisPanel">Overview</button>
+      <button type="button" data-target="dailyAttendancePanel">Daily Attendance</button>
+      <button type="button" data-target="adminReviewPanel">Verification</button>
+      <button type="button" data-target="reportsPanel">Reports</button>
+      <button type="button" data-target="smPanel">Students & Classes</button>
+      <button type="button" data-target="calendarTermsPanel">Calendar & Terms</button>
+      <button type="button" data-target="teacherManagement">Teachers</button>
+    </nav>
+
+    <!-- USER INFORMATION -->
+    <div class="panel overview-panel">
+      <span id="roleBadge" class="role"></span>
+      <h2 style="margin-top:16px">Dashboard</h2>
+      <p class="subtitle" style="margin-bottom:0">
+        Welcome to the attendance management system.
+      </p>
+    </div>
+
+    <!-- ADMIN NAVIGATION -->
+    <div id="adminNavigation" class="panel hidden">
+      <h2>Administration</h2>
+
+      <button id="manageTeachersButton" type="button">
+        Manage Teachers
+      </button>
+    </div>
+
+
+
+    <!-- ADMIN STUDENT / CLASS MANAGEMENT -->
+    <section id="smPanel" class="panel hidden">
+      <h2>Student & Class Management</h2>
+      <p class="subtitle">Admin only. Fictional data testing. Existing attendance records are preserved.</p>
+      <div class="attendance-filters">
+        <div><label for="smGrade">Grade</label><select id="smGrade"></select></div>
+        <div><label>&nbsp;</label><button type="button" id="smRefresh">Load Register</button></div>
+      </div>
+      <h3>Add Class Section</h3>
+      <form id="smClassForm" class="attendance-filters">
+        <div><label for="smNewSection">Section (e.g. B)</label><input id="smNewSection" maxlength="5" required placeholder="B"></div>
+        <div><label>&nbsp;</label><button type="submit">Add Section</button></div>
+      </form>
+      <h3>Add Student</h3>
+      <form id="smStudentForm">
+        <div class="attendance-filters">
+          <div><label for="smName">Student Name</label><input id="smName" maxlength="120" required></div>
+          <div><label for="smAdmission">Admission Number</label><input id="smAdmission" maxlength="60" required></div>
+          <div><label for="smSection">Class Section</label><select id="smSection" required></select></div>
+          <div><label for="smRoll">Roll Number</label><input id="smRoll" type="number" min="1" max="9999" required></div>
+          <div><label for="smGender">Gender</label><select id="smGender"><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select></div>
+          <div><label for="smAdmitted">Admission Date</label><input id="smAdmitted" type="date" required></div>
+        </div>
+        <button class="full" type="submit">Add Student</button>
+      </form>
+
+      <h3>Edit Student Details</h3>
+      <p class="subtitle">Edit name, gender and roll number. Student ID and admission number remain unchanged.</p>
+      <form id="smEditForm">
+        <div class="attendance-filters">
+          <div><label for="smEditId">Student ID</label><input id="smEditId" required></div>
+          <div><label for="smEditName">Corrected Name</label><input id="smEditName" maxlength="120" required></div>
+          <div><label for="smEditGender">Gender</label><select id="smEditGender"><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select></div>
+          <div><label for="smEditRoll">Roll Number</label><input id="smEditRoll" type="number" min="1" max="9999" required></div>
+        </div>
+        <label for="smEditReason">Reason for edit</label><input id="smEditReason" maxlength="250" required>
+        <button type="submit">Save Student Changes</button>
+      </form>
+      <h3>Transfer Student (No Previous Attendance Only)</h3>
+      <p class="subtitle">Transfers are blocked for students with attendance history to protect previous class reports. Same-day transfer only.</p>
+      <form id="smTransferForm">
+        <div class="attendance-filters">
+          <div><label for="smTransferId">Student ID</label><input id="smTransferId" required></div>
+          <div><label for="smTransferGrade">Destination Grade</label><select id="smTransferGrade" required></select></div>
+          <div><label for="smTransferSection">Destination Section</label><input id="smTransferSection" maxlength="5" placeholder="A" required></div>
+          <div><label for="smTransferDate">Effective Date (Today)</label><input id="smTransferDate" type="date" required></div>
+        </div>
+        <label for="smTransferReason">Transfer reason</label><input id="smTransferReason" maxlength="250" required>
+        <button type="submit" class="secondary">Transfer Student</button>
+      </form>
+      <h3>Mark Student as Left / Inactive</h3>
+      <p class="subtitle">Historical attendance is not deleted. Use this only for confirmed departures, not transfers between classes.</p>
+      <form id="smLeaveForm">
+        <div class="attendance-filters">
+          <div><label for="smLeaveId">Student ID</label><input id="smLeaveId" required></div>
+          <div><label for="smLeaveDate">Last Enrollment Date</label><input id="smLeaveDate" type="date" required></div>
+        </div>
+        <label for="smLeaveReason">Reason</label><input id="smLeaveReason" maxlength="250" required>
+        <button type="submit" class="secondary full">Mark Student Inactive</button>
+      </form>
+      <p id="smMessage" class="message" role="status"></p>
+      <h3>Current Grade Register</h3><div id="smRegister"></div>
+    </section>
+
+    <!-- ADMIN SCHOOL CALENDAR AND TERMS -->
+    <section id="calendarTermsPanel" class="panel hidden">
+      <h2>School Calendar & Academic Terms</h2>
+      <p class="subtitle">Admin only. Calendar exceptions override regular Monday–Friday school days.</p>
+      <div class="attendance-filters">
+        <div><label for="ctYear">Academic year</label><select id="ctYear"></select></div>
+        <div><label>&nbsp;</label><button type="button" id="ctRefresh">Refresh Calendar</button></div>
+      </div>
+      <h3>Set a school calendar exception</h3>
+      <form id="ctDayForm">
+        <div class="attendance-filters">
+          <div><label for="ctDate">Date</label><input id="ctDate" type="date" required></div>
+          <div><label for="ctType">Day type</label><select id="ctType"><option value="HOLIDAY">Holiday</option><option value="CLOSED">Unexpected closure</option><option value="SCHOOL_DAY">Special school day</option></select></div>
+        </div>
+        <label for="ctDescription">Reason / description</label><input id="ctDescription" maxlength="200" required placeholder="e.g. School holiday">
+        <button class="full" type="submit" id="ctDaySave">Add calendar day</button>
+      </form>
+      <h3>Define academic term</h3>
+      <form id="ctTermForm">
+        <label for="ctTermName">Term name</label><input id="ctTermName" required maxlength="50" placeholder="Term 1">
+        <div class="attendance-filters">
+          <div><label for="ctStart">Start date</label><input id="ctStart" type="date" required></div>
+          <div><label for="ctEnd">End date</label><input id="ctEnd" type="date" required></div>
+        </div>
+        <button class="full" type="submit" id="ctTermSave">Save academic term</button>
+      </form>
+      <p id="ctMessage" class="message" role="status"></p>
+      <h3>Calendar entries</h3><div id="ctDaysList"></div>
+      <h3>Academic terms</h3><div id="ctTermsList"></div>
+    </section>
+    <!-- ADMIN ATTENDANCE REPORTS -->
+    <section id="reportsPanel" class="panel hidden">
+      <h2>Attendance Reports</h2>
+      <p class="subtitle">Admin-only PDF reports and bulk ZIP exports. Based on completed attendance records.</p>
+      <div class="attendance-filters">
+        <div><label for="rptYear">Academic Year</label><select id="rptYear"></select></div>
+        <div><label for="rptTerm">Term</label><select id="rptTerm"><option value="ALL">Full Year</option></select></div>
+        <div><label for="rptType">Report type</label><select id="rptType">
+          <option value="STUDENT">Individual student PDF</option><option value="CLASS">Class summary PDF</option>
+          <option value="GRADE">Grade summary PDF</option><option value="SCHOOL">Whole-school summary PDF</option>
+          <option value="GRADE_ZIP">Grade student PDFs (ZIP)</option><option value="SCHOOL_ZIP">Whole-school student PDFs (ZIP)</option>
+        </select></div>
+        <div id="rptFilterBox"><label for="rptFilter">Student</label><select id="rptFilter"></select></div>
+      </div>
+      <button id="rptDownload" type="button" style="margin-top:16px">Generate & Download</button>
+      <p id="rptMessage" class="message" role="status"></p>
+    </section>
+    <!-- TEACHER MANAGEMENT -->
+    <div id="teacherManagement" class="panel hidden">
+      <h2>Teacher Management</h2>
+      <p class="subtitle">
+        Create and view staff accounts.
+      </p>
+
+      <form id="createTeacherForm">
+        <label for="teacherName">Teacher Name</label>
+        <input
+          id="teacherName"
+          maxlength="120"
+          required
+        >
+
+        <label for="teacherUsername">Username</label>
+        <input
+          id="teacherUsername"
+          minlength="4"
+          maxlength="32"
+          required
+        >
+
+        <label for="teacherPassword">Temporary Password</label>
+        <input
+          id="teacherPassword"
+          type="password"
+          minlength="14"
+          maxlength="256"
+          autocomplete="new-password"
+          required
+        >
+
+        <button id="createTeacherButton"
+                class="full"
+                type="submit">
+          Create Teacher
+        </button>
+      </form>
+
+      <p id="teacherMessage"
+         class="message"
+         role="status"></p>
+
+      <h2 style="margin-top:30px">Staff Accounts</h2>
+      <div id="staffList"></div>
+    </div>
+
+
+    <!-- ADMIN ATTENDANCE REVIEW -->
+    <section id="adminReviewPanel" class="panel hidden">
+      <h2>Attendance Verification & Corrections</h2>
+      <p class="subtitle">Admin only. Select a submitted class and date to review.</p>
+      <div class="review-controls">
+        <div><label for="reviewDate">Date</label><input id="reviewDate" type="date"></div>
+        <div><label for="reviewGrade">Grade</label><select id="reviewGrade"><option value="">Select grade</option></select></div>
+        <div><label for="reviewSection">Section</label><select id="reviewSection"><option value="A">A</option></select></div>
+        <button type="button" id="loadReviewButton">Load Review</button>
+      </div>
+      <p id="reviewMessage" class="message" role="status"></p>
+      <div id="reviewContent"></div>
+      <button id="verifyReviewButton" type="button" class="hidden" style="margin-top:16px">Verify Attendance</button>
+    </section>
+
+    <!-- ATTENDANCE ANALYSIS -->
+    <section id="analysisPanel" class="panel">
+      <h2>Attendance Dashboard & Analysis</h2>
+      <p class="subtitle">Submitted attendance records only. Late is counted as present for percentages.</p>
+      <div class="analysis-toolbar">
+        <div><label for="analysisYear">Academic Year</label><select id="analysisYear"></select></div>
+        <button id="analysisRefresh" type="button">Refresh Analysis</button>
+      </div>
+      <p id="analysisMessage" class="message" role="status"></p>
+      <div id="analysisContent"></div>
+    </section>
+
+    <!-- DAILY ATTENDANCE -->
+    <div id="dailyAttendancePanel" class="panel">
+      <h2>Daily Attendance</h2>
+
+      <p class="subtitle" style="margin-bottom:10px">
+        Choose a grade to open its student register.
+      </p>
+
+      <div class="attendance-filters">
+        <div>
+          <label for="attendanceGrade">Grade</label>
+          <select id="attendanceGrade">
+            <option value="">Select Grade</option>
+          </select>
+        </div>
+
+        <div id="attendanceSectionField" class="hidden">
+          <label for="attendanceSection">Section</label>
+          <select id="attendanceSection" disabled>
+            <option value="">Select Section</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="attendance-context">
+        <span id="attendanceClassPill" class="attendance-class-pill hidden"></span>
+        <span id="attendanceHint" class="attendance-help">Select a grade to get started.</span>
+      </div>
+      <p id="attendanceMessage"
+         class="message"
+         role="status"></p>
+
+      <div id="attendanceStudents"></div>
+
+      <div id="attendanceSummary"
+           class="attendance-summary hidden">
+      </div>
+
+      <div id="attendanceSubmitArea" class="hidden" style="margin-top:20px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+          <input id="attendanceConfirm" type="checkbox" style="width:18px;height:18px;flex-shrink:0;margin:1px 0">
+          <span>I have checked all student attendance statuses and confirm they are correct.</span>
+        </label>
+        <button id="submitAttendanceButton" type="button" class="full" disabled>Submit Today's Attendance</button>
+      </div>
+      <div class="notice" id="attendanceNotice">
+        Select a class and check the attendance before submitting. Once submitted, teachers cannot edit it.
+      </div>
+    </div>
+
+  </section>
+
+  <script>
+    let sessionToken = null;
+    let currentStudents = [];
+    const sectionCache = new Map();
+    const studentCache = new Map();
+    let attendanceRequestId = 0;
+
+    const $ = id => document.getElementById(id);
+
+    // ---------- UI HELPERS ----------
+
+    function showScreen(screenId) {
+      [
+        "loginScreen",
+        "preparingScreen",
+        "changeScreen",
+        "dashboardScreen"
+      ].forEach(id => $(id).classList.add("hidden"));
+
+      $(screenId).classList.remove("hidden");
+    }
+
+    function showMessage(id, text, success = false) {
+      const element = $(id);
+
+      element.textContent = text;
+      element.className =
+        "message " + (success ? "success" : "error");
+    }
+
+    function setBusy(buttonId, busy, normalText, busyText) {
+      const button = $(buttonId);
+      button.disabled = busy;
+      button.textContent = busy ? busyText : normalText;
+    }
+
+    function clearSession() {
+      sessionToken = null;
+      currentStudents = [];
+      sectionCache.clear();
+      studentCache.clear();
+      analysisCache.clear();
+      attendanceRequestId++;
+
+      [
+        "password",
+        "currentPassword",
+        "newPassword",
+        "confirmPassword",
+        "teacherPassword"
+      ].forEach(id => {
+        $(id).value = "";
+      });
+
+      clearAttendance();
+      $("teacherManagement").classList.add("hidden");
+      $("adminNavigation").classList.add("hidden");
+      $("adminReviewPanel").classList.add("hidden");
+      $("reportsPanel").classList.add("hidden");
+      $("reviewContent").replaceChildren();
+    }
+
+    // ---------- LOGIN ----------
+
+    $("loginForm").addEventListener("submit", event => {
+      event.preventDefault();
+
+      const username = $("username").value.trim();
+      const password = $("password").value;
+
+      setBusy(
+        "loginButton",
+        true,
+        "Sign In",
+        "Signing in..."
+      );
+
+      showMessage("loginMessage", "");
+
+      google.script.run
+        .withSuccessHandler(result => {
+          setBusy(
+            "loginButton",
+            false,
+            "Sign In",
+            "Signing in..."
+          );
+
+          if (!result || !result.success) {
+            showMessage("loginMessage", "Login failed.");
+            return;
+          }
+
+          sessionToken = result.token;
+          $("password").value = "";
+
+          if (result.mustChangePassword) {
+            showScreen("changeScreen");
+          } else {
+            showScreen("preparingScreen");
+            openDashboard();
+          }
+        })
+        .withFailureHandler(error => {
+          setBusy(
+            "loginButton",
+            false,
+            "Sign In",
+            "Signing in..."
+          );
+
+          showMessage(
+            "loginMessage",
+            error.message || "Unable to sign in."
+          );
+        })
+        .authLogin(username, password);
+    });
+
+    // ---------- PASSWORD CHANGE ----------
+
+    $("changeForm").addEventListener("submit", event => {
+      event.preventDefault();
+
+      if (!sessionToken) {
+        showScreen("loginScreen");
+        return;
+      }
+
+      const current = $("currentPassword").value;
+      const next = $("newPassword").value;
+      const confirm = $("confirmPassword").value;
+
+      if (next !== confirm) {
+        showMessage(
+          "changeMessage",
+          "New passwords do not match."
+        );
+        return;
+      }
+
+      setBusy(
+        "changeButton",
+        true,
+        "Update Password",
+        "Updating..."
+      );
+
+      showMessage("changeMessage", "");
+
+      google.script.run
+        .withSuccessHandler(result => {
+          setBusy(
+            "changeButton",
+            false,
+            "Update Password",
+            "Updating..."
+          );
+
+          if (result && result.success) {
+            clearSession();
+            showScreen("loginScreen");
+
+            showMessage(
+              "loginMessage",
+              "Password updated. Sign in with your new password.",
+              true
+            );
+          }
+        })
+        .withFailureHandler(error => {
+          setBusy(
+            "changeButton",
+            false,
+            "Update Password",
+            "Updating..."
+          );
+
+          showMessage(
+            "changeMessage",
+            error.message || "Password update failed."
+          );
+        })
+        .authChangePassword(
+          sessionToken,
+          current,
+          next
+        );
+    });
+
+    // ---------- DASHBOARD ----------
+
+    function openDashboard() {
+      if (!sessionToken) {
+        showScreen("loginScreen");
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(user => {
+          if (user.mustChangePassword) {
+            showScreen("changeScreen");
+            return;
+          }
+
+          $("welcomeText").textContent =
+            "Welcome, " + user.name;
+
+          $("roleBadge").textContent = user.role;
+          refreshQuickNavigation();
+
+          const isAdmin = user.role === "ADMIN";
+          $("smPanel").classList.toggle("hidden", !isAdmin);
+          if(isAdmin) smLoad();
+          $("adminReviewPanel").classList.toggle("hidden", !isAdmin);
+          $("reportsPanel").classList.toggle("hidden", !isAdmin);
+          if (isAdmin) rptLoadOptions();
+          $("calendarTermsPanel").classList.toggle("hidden", !isAdmin);
+          if(isAdmin) ctLoad();
+
+          $("adminNavigation").classList.toggle(
+            "hidden",
+            !isAdmin
+          );
+
+          $("teacherManagement").classList.add("hidden");
+
+          clearAttendance();
+          showScreen("dashboardScreen");
+          activateWorkspaceTab("analysisPanel");
+          loadAttendanceAnalysis();
+        })
+        .withFailureHandler(error => {
+          clearSession();
+          showScreen("loginScreen");
+
+          showMessage(
+            "loginMessage",
+            error.message || "Session expired."
+          );
+        })
+        .authSession(sessionToken);
+    }
+
+    // ---------- LOGOUT ----------
+
+    function logout() {
+      const token = sessionToken;
+
+      clearSession();
+      showScreen("loginScreen");
+
+      showMessage(
+        "loginMessage",
+        "Signed out successfully.",
+        true
+      );
+
+      if (token) {
+        google.script.run
+          .withFailureHandler(() => {})
+          .authLogout(token);
+      }
+    }
+
+    $("logoutButton").addEventListener("click", logout);
+    $("changeLogout").addEventListener("click", logout);
+
+    // ---------- TEACHER MANAGEMENT ----------
+
+    $("manageTeachersButton").addEventListener("click", () => {
+      $("teacherManagement").classList.toggle("hidden");
+
+      if (!$("teacherManagement").classList.contains("hidden")) {
+        loadStaff();
+      }
+    });
+
+    function loadStaff() {
+      if (!sessionToken) return;
+
+      const token = sessionToken;
+      $("staffList").textContent = "Loading staff accounts...";
+
+      google.script.run
+        .withSuccessHandler(staff => {
+          if (token !== sessionToken) return;
+
+          const container = $("staffList");
+          container.replaceChildren();
+
+          if (!staff.length) {
+            container.textContent = "No staff accounts found.";
+            return;
+          }
+
+          staff.forEach(person => {
+            const item=document.createElement('div');item.className='staff-item staff-card';
+            const head=document.createElement('div');head.className='staff-head';
+            const identity=document.createElement('div');
+            const name=document.createElement('strong');name.textContent=person.name;
+            const details=document.createElement('p');details.textContent=person.username+' · '+person.role;
+            identity.append(name,details);
+            const status=document.createElement('span');status.className='staff-status '+(person.active?'active':'inactive');status.textContent=person.active?'Active':'Inactive';
+            head.append(identity,status);item.appendChild(head);
+            if(person.role==='TEACHER'){
+              const actions=document.createElement('div');actions.className='staff-actions';
+              function action(label,kind,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.className='staff-action '+kind;b.addEventListener('click',fn);actions.appendChild(b);}
+              function run(actionName,method,...args){
+                if(!window.confirm(actionName+' for '+person.name+'?'))return;
+                item.classList.add('staff-busy');
+                google.script.run.withSuccessHandler(result=>{item.classList.remove('staff-busy');showMessage('teacherMessage',result.message||actionName+' completed.',true);loadStaff();})
+                  .withFailureHandler(err=>{item.classList.remove('staff-busy');showMessage('teacherMessage',err.message||'Action failed.');})[method](token,...args);
+              }
+              action('Reset password','reset',()=>{
+                const password=window.prompt('Enter a new temporary password (minimum 14 characters) for '+person.username+':');
+                if(password===null)return;
+                if(password.length<14||password.length>256){showMessage('teacherMessage','Temporary password must be 14–256 characters.');return;}
+                run('Reset password','authResetStaffPassword',person.staffId,password);
+              });
+              action(person.active?'Deactivate':'Reactivate','toggle',()=>run(person.active?'Deactivate':'Reactivate','authSetStaffActive',person.staffId,!person.active));
+              action('Archive','archive',()=>run('Archive teacher account (cannot be restored from this interface)','authArchiveStaff',person.staffId));
+              item.appendChild(actions);
+            }
+            container.appendChild(item);
+          });
+        })
+        .withFailureHandler(error => {
+          if (token !== sessionToken) return;
+
+          $("staffList").textContent =
+            error.message || "Unable to load staff.";
+        })
+        .authListStaff(token);
+    }
+
+    $("createTeacherForm").addEventListener("submit", event => {
+      event.preventDefault();
+
+      if (!sessionToken) return;
+
+      const token = sessionToken;
+      const name = $("teacherName").value.trim();
+      const username = $("teacherUsername").value.trim();
+      const password = $("teacherPassword").value;
+
+      setBusy(
+        "createTeacherButton",
+        true,
+        "Create Teacher",
+        "Creating..."
+      );
+
+      showMessage("teacherMessage", "");
+
+      google.script.run
+        .withSuccessHandler(result => {
+          if (token !== sessionToken) return;
+
+          setBusy(
+            "createTeacherButton",
+            false,
+            "Create Teacher",
+            "Creating..."
+          );
+
+          if (result && result.success) {
+            $("createTeacherForm").reset();
+
+            showMessage(
+              "teacherMessage",
+              "Teacher account created successfully.",
+              true
+            );
+
+            loadStaff();
+          }
+        })
+        .withFailureHandler(error => {
+          if (token !== sessionToken) return;
+
+          setBusy(
+            "createTeacherButton",
+            false,
+            "Create Teacher",
+            "Creating..."
+          );
+
+          showMessage(
+            "teacherMessage",
+            error.message || "Unable to create teacher."
+          );
+        })
+        .authCreateStaff(
+          token,
+          name,
+          username,
+          "TEACHER",
+          password
+        );
+    });
+
+    // ---------- ATTENDANCE ----------
+
+    function initializeAttendance() {
+      const gradeSelect = $("attendanceGrade");
+
+      gradeSelect.replaceChildren(
+        new Option("Select Grade", "")
+      );
+
+      for (let grade = 1; grade <= 13; grade++) {
+        gradeSelect.add(
+          new Option("Grade " + grade, String(grade))
+        );
+      }
+    }
+
+    function clearAttendance() {
+      currentStudents = [];
+
+      $("attendanceGrade").value = "";
+
+      $("attendanceSection").replaceChildren(
+        new Option("Select Section", "")
+      );
+
+      $("attendanceSection").disabled = true;
+      $("attendanceSectionField").classList.add("hidden");
+      $("attendanceClassPill").classList.add("hidden");
+      $("attendanceHint").textContent = "Select a grade to get started.";
+      $("attendanceStudents").replaceChildren();
+
+      $("attendanceSummary").replaceChildren();
+      $("attendanceSummary").classList.add("hidden");
+
+      $("attendanceSubmitArea").classList.add("hidden");
+      $("attendanceConfirm").checked = false;
+      $("submitAttendanceButton").disabled = true;
+      showMessage("attendanceMessage", "");
+    }
+
+    function setAttendanceLoading(text) {
+      showMessage("attendanceMessage", text, true);
+      $("attendanceMessage").classList.add("attendance-message-loading");
+    }
+
+    function setAttendanceReadyMessage(text, success = true) {
+      showMessage("attendanceMessage", text, success);
+      $("attendanceMessage").classList.remove("attendance-message-loading");
+    }
+
+    function displaySections(grade, classes) {
+      const sectionSelect = $("attendanceSection");
+      const sectionField = $("attendanceSectionField");
+      sectionSelect.replaceChildren(new Option("Select Section", ""));
+      classes.forEach(item => {
+        sectionSelect.add(new Option(item.section, item.section));
+      });
+      sectionSelect.disabled = classes.length === 0;
+      sectionField.classList.toggle("hidden", classes.length <= 1);
+      $("attendanceClassPill").classList.add("hidden");
+      if (classes.length === 1) {
+        sectionSelect.value = classes[0].section;
+        $("attendanceHint").textContent = "Opening your class register automatically.";
+        setAttendanceReadyMessage("");
+        sectionSelect.dispatchEvent(new Event("change"));
+      } else if (classes.length > 1) {
+        $("attendanceHint").textContent = "Multiple sections available. Choose a section.";
+        setAttendanceReadyMessage("");
+      } else {
+        $("attendanceHint").textContent = "No active class is available for this grade.";
+        setAttendanceReadyMessage("");
+      }
+    }
+
+    $("attendanceGrade").addEventListener("change", () => {
+      const grade = $("attendanceGrade").value;
+      const sectionSelect = $("attendanceSection");
+      const requestId = ++attendanceRequestId;
+      currentStudents = [];
+      sectionSelect.replaceChildren(new Option("Select Section", ""));
+      sectionSelect.disabled = true;
+      $("attendanceSectionField").classList.add("hidden");
+      $("attendanceClassPill").classList.add("hidden");
+      $("attendanceHint").textContent = grade ? "Finding available class…" : "Select a grade to get started.";
+      $("attendanceStudents").replaceChildren();
+      $("attendanceSummary").classList.add("hidden");
+      resetSubmissionUI();
+
+      if (!grade || !sessionToken) {
+        showMessage("attendanceMessage", "");
+        return;
+      }
+
+      // Revisited grades show their sections immediately.
+      if (sectionCache.has(grade)) {
+        displaySections(grade, sectionCache.get(grade));
+        return;
+      }
+
+      const token = sessionToken;
+      // First visit still requires Apps Script; show a subtle loading state.
+      setAttendanceLoading("Finding available class…");
+      google.script.run
+        .withSuccessHandler(classes => {
+          if (token !== sessionToken) return;
+          sectionCache.set(grade, classes);
+          if (requestId !== attendanceRequestId ||
+              $("attendanceGrade").value !== grade) return;
+          displaySections(grade, classes);
+        })
+        .withFailureHandler(error => {
+          if (token !== sessionToken || requestId !== attendanceRequestId) return;
+          setAttendanceReadyMessage(error.message || "Unable to load sections.", false);
+        })
+        .getAttendanceClasses(token, Number(grade));
+    });
+
+    $("attendanceSection").addEventListener("change", () => {
+      const grade = $("attendanceGrade").value;
+      const section = $("attendanceSection").value;
+      const requestId = ++attendanceRequestId;
+      currentStudents = [];
+      $("attendanceStudents").replaceChildren();
+      $("attendanceSummary").classList.add("hidden");
+      resetSubmissionUI();
+
+      if (!grade || !section || !sessionToken) return;
+      $("attendanceClassPill").textContent = "Class " + grade + section;
+      $("attendanceClassPill").classList.remove("hidden");
+      $("attendanceHint").textContent = "Student register";
+      const cacheKey = grade + ":" + section;
+      if (studentCache.has(cacheKey)) {
+        currentStudents = studentCache.get(cacheKey);
+        renderAttendanceStudents(currentStudents);
+        setAttendanceReadyMessage(currentStudents.length + " students ready.");
+        checkSubmittedStatus(grade, section, requestId);
+        return;
+      }
+
+      const token = sessionToken;
+      setAttendanceLoading("Opening student register…");
+      google.script.run
+        .withSuccessHandler(students => {
+          if (token !== sessionToken) return;
+          studentCache.set(cacheKey, students);
+          if (requestId !== attendanceRequestId ||
+              $("attendanceGrade").value !== grade ||
+              $("attendanceSection").value !== section) return;
+          currentStudents = students;
+          renderAttendanceStudents(students);
+          setAttendanceReadyMessage(students.length + " students ready.");
+          checkSubmittedStatus(grade, section, requestId);
+        })
+        .withFailureHandler(error => {
+          if (token !== sessionToken || requestId !== attendanceRequestId) return;
+          setAttendanceReadyMessage(error.message || "Unable to load students.", false);
+        })
+        .getAttendanceStudents(token, Number(grade), section);
+    });
+
+    function renderAttendanceStudents(students) {
+      const container = $("attendanceStudents");
+      container.replaceChildren();
+
+      if (!students.length) {
+        container.textContent =
+          "No students found for this class.";
+        return;
+      }
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "attendance-table-wrapper";
+
+      const table = document.createElement("table");
+      table.className = "attendance-table";
+
+      const header = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+
+      [
+        "Roll No",
+        "Student Name",
+        "Gender",
+        "Status"
+      ].forEach(label => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      });
+
+      header.appendChild(headerRow);
+      table.appendChild(header);
+
+      const body = document.createElement("tbody");
+
+      students.forEach(student => {
+        const row = document.createElement("tr");
+
+        [
+          student.rollNo,
+          student.name,
+          student.gender
+        ].forEach(value => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+
+        const statusCell = document.createElement("td");
+        const statusGroup = document.createElement("div");
+        statusGroup.className = "status-buttons";
+        statusGroup.dataset.studentId = student.studentId;
+        statusGroup.dataset.status = "PRESENT";
+        statusGroup.setAttribute("role", "group");
+        statusGroup.setAttribute("aria-label", "Attendance for " + student.name);
+
+        [
+          ["PRESENT", "Present"],
+          ["ABSENT", "Absent"],
+          ["LATE", "Late"]
+        ].forEach(([value, label]) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "status-button";
+          button.dataset.status = value;
+          button.textContent = label;
+          button.setAttribute("aria-pressed", String(value === "PRESENT"));
+
+          if (value === "PRESENT") {
+            button.classList.add("selected", "present");
+          }
+
+          button.addEventListener("click", () => {
+            statusGroup.dataset.status = value;
+            statusGroup.querySelectorAll("button").forEach(btn => {
+              const selected = btn.dataset.status === value;
+              btn.className = "status-button";
+              btn.setAttribute("aria-pressed", String(selected));
+              if (selected) btn.classList.add("selected", value.toLowerCase());
+            });
+            updateSummary();
+          });
+
+          statusGroup.appendChild(button);
+        });
+
+        statusCell.appendChild(statusGroup);
+        row.appendChild(statusCell);
+        body.appendChild(row);
+      });
+
+      table.appendChild(body);
+      wrapper.appendChild(table);
+      container.appendChild(wrapper);
+
+      updateSummary();
+      $("attendanceSubmitArea").classList.remove("hidden");
+      $("submitAttendanceButton").disabled = true;
+    }
+
+    function updateSummary() {
+      const groups = Array.from(
+        $("attendanceStudents").querySelectorAll(
+          ".status-buttons[data-student-id]"
+        )
+      );
+
+      const summary = $("attendanceSummary");
+      summary.replaceChildren();
+
+      if (!groups.length) {
+        summary.classList.add("hidden");
+        return;
+      }
+
+      const counts = { PRESENT: 0, ABSENT: 0, LATE: 0 };
+      groups.forEach(group => { counts[group.dataset.status]++; });
+
+      [
+        ["Total", groups.length],
+        ["Present", counts.PRESENT],
+        ["Absent", counts.ABSENT],
+        ["Late", counts.LATE]
+      ].forEach(([label, count]) => {
+        const chip = document.createElement("div");
+        chip.className = "summary-chip";
+        const number = document.createElement("strong");
+        number.textContent = count;
+        chip.append(document.createTextNode(label + ": "), number);
+        summary.appendChild(chip);
+      });
+
+      summary.classList.remove("hidden");
+    }
+
+    function resetSubmissionUI() {
+      $("attendanceSubmitArea").classList.add("hidden");
+      $("attendanceConfirm").checked = false;
+      $("submitAttendanceButton").disabled = true;
+      $("attendanceNotice").textContent = "Select a class and check attendance before submitting. Once submitted, teachers cannot edit it.";
+    }
+
+    $("attendanceConfirm").addEventListener("change", () => {
+      $("submitAttendanceButton").disabled = !$("attendanceConfirm").checked;
+    });
+
+    function showSavedAttendanceStatuses(entries) {
+      const byId = new Map(entries.map(item => [String(item.studentId), String(item.status).toUpperCase()]));
+      const groups = $("attendanceStudents").querySelectorAll(".status-buttons[data-student-id]");
+      groups.forEach(group => {
+        const status = byId.get(group.dataset.studentId);
+        if (!["PRESENT", "ABSENT", "LATE"].includes(status)) {
+          throw new Error("Saved attendance is incomplete or contains an invalid status.");
+        }
+        group.dataset.status = status;
+        group.querySelectorAll("button").forEach(button => {
+          const selected = button.dataset.status === status;
+          button.className = "status-button";
+          button.disabled = true;
+          button.setAttribute("aria-pressed", String(selected));
+          if (selected) button.classList.add("selected", status.toLowerCase());
+        });
+      });
+      if (groups.length !== byId.size) throw new Error("Saved register differs from the current student list. Refresh the page.");
+      updateSummary();
+    }
+
+    function checkSubmittedStatus(grade, section, requestId) {
+      const token = sessionToken;
+      $("submitAttendanceButton").disabled = true;
+      $("attendanceNotice").textContent = "Checking today's submission status…";
+      google.script.run
+        .withSuccessHandler(result => {
+          if (token !== sessionToken || requestId !== attendanceRequestId) return;
+          if (result.submitted) {
+            $("attendanceSubmitArea").classList.add("hidden");
+            try { showSavedAttendanceStatuses(result.entries || []); }
+            catch (error) {
+              $("attendanceStudents").replaceChildren();
+              showMessage("attendanceMessage", error.message);
+              return;
+            }
+            $("attendanceNotice").textContent = "Attendance already submitted for " + result.date + ". This class is read-only. Present: " + result.counts.PRESENT + ", Absent: " + result.counts.ABSENT + ", Late: " + result.counts.LATE + ".";
+          } else {
+            $("attendanceSubmitArea").classList.remove("hidden");
+            $("submitAttendanceButton").disabled = !$("attendanceConfirm").checked;
+            $("attendanceNotice").textContent = "Not submitted yet. Check all statuses, confirm, then submit once.";
+          }
+        })
+        .withFailureHandler(error => {
+          if (token !== sessionToken || requestId !== attendanceRequestId) return;
+          $("attendanceSubmitArea").classList.add("hidden");
+          $("attendanceNotice").textContent = "Cannot verify submission status: " + (error.message || "Unknown error") + ". Submission disabled.";
+        })
+        .getDailyAttendanceStatus(token, Number(grade), section);
+    }
+
+    $("submitAttendanceButton").addEventListener("click", () => {
+      const grade = $("attendanceGrade").value;
+      const section = $("attendanceSection").value;
+      if (!sessionToken || !grade || !section || !$("attendanceConfirm").checked) return;
+      const entries = Array.from($("attendanceStudents").querySelectorAll(".status-buttons[data-student-id]"))
+        .map(group => ({ studentId: group.dataset.studentId, status: group.dataset.status }));
+      if (!entries.length || entries.length !== currentStudents.length) return;
+      if (!window.confirm("Submit today's attendance for Grade " + grade + section + "? This cannot be edited by teachers afterwards.")) return;
+      const token = sessionToken;
+      const requestId = attendanceRequestId;
+      setBusy("submitAttendanceButton", true, "Submit Today's Attendance", "Submitting…");
+      google.script.run
+        .withSuccessHandler(result => {
+          if (token !== sessionToken || requestId !== attendanceRequestId) return;
+          setBusy("submitAttendanceButton", false, "Submit Today's Attendance", "Submitting…");
+          $("attendanceStudents").querySelectorAll(".status-button").forEach(b => b.disabled = true);
+          $("attendanceSubmitArea").classList.add("hidden");
+          $("attendanceNotice").textContent = "Submitted successfully: " + result.count + " students on " + result.date + ". This class is now read-only.";
+          showMessage("attendanceMessage", "Attendance saved successfully!", true);
+        })
+        .withFailureHandler(error => {
+          if (token !== sessionToken || requestId !== attendanceRequestId) return;
+          setBusy("submitAttendanceButton", false, "Submit Today's Attendance", "Submitting…");
+          showMessage("attendanceMessage", error.message || "Submission failed.");
+          checkSubmittedStatus(grade, section, requestId);
+        })
+        .submitDailyAttendance(token, Number(grade), section, entries, true);
+    });
+
+
+    // ---------- ADMIN ATTENDANCE REVIEW ----------
+    let currentReview = null;
+    for(let g=1;g<=13;g++) $("reviewGrade").add(new Option("Grade "+g,String(g)));
+    $("reviewDate").value = new Date(Date.now()+330*60000).toISOString().slice(0,10);
+    $("reviewDate").max = $("reviewDate").value;
+    function reviewError(err) { showMessage("reviewMessage",err.message||"Request failed."); }
+    function renderReview(data) {
+      currentReview=data;
+      const box=$("reviewContent"); box.replaceChildren();
+      $("verifyReviewButton").classList.toggle("hidden",!data.submitted||data.verified);
+      if(!data.submitted) { box.textContent="No submitted attendance for this class and date."; return; }
+      const info=document.createElement("p");
+      info.textContent=data.verified?"Verified by "+data.verifiedBy:"Pending admin verification";
+      box.append(info);
+      const wrapper=document.createElement("div"); wrapper.className="attendance-table-wrapper";
+      const table=document.createElement("table"); table.className="review-table";
+      const head=document.createElement("tr");
+      ["Student ID","Student Name","Current Status","Correct Status","Action"].forEach(t=>{
+        const th=document.createElement("th");th.textContent=t;head.append(th);
+      });
+      table.append(head);
+      data.students.forEach(student=>{
+        const row=document.createElement("tr");
+        [student.studentId,student.name,student.status].forEach(value=>{
+          const td=document.createElement("td");td.textContent=value;row.append(td);
+        });
+        const statusTd=document.createElement("td"), select=document.createElement("select");
+        ["PRESENT","ABSENT","LATE"].forEach(v=>select.add(new Option(v,v)));
+        select.value=student.status;select.setAttribute("aria-label","Correct status for "+student.name);
+        statusTd.append(select);row.append(statusTd);
+        const action=document.createElement("td"),btn=document.createElement("button");
+        btn.type="button";btn.textContent="Correct";
+        btn.addEventListener("click",()=>{
+          if(select.value===student.status) { showMessage("reviewMessage","Select a different status first.");return; }
+          const reason=window.prompt("Reason for correcting "+student.name+" (minimum 5 characters):");
+          if(reason===null)return;
+          if(reason.trim().length<5){showMessage("reviewMessage","Reason must be at least 5 characters.");return;}
+          btn.disabled=true;
+          google.script.run.withSuccessHandler(()=>loadReview()).withFailureHandler(e=>{btn.disabled=false;reviewError(e);})
+            .adminCorrectAttendance(sessionToken,data.date,Number($("reviewGrade").value),$("reviewSection").value,
+              student.studentId,select.value,reason);
+        });
+        action.append(btn);row.append(action);table.append(row);
+      });
+      wrapper.append(table);box.append(wrapper);
+    }
+    function loadReview(){
+      const date=$("reviewDate").value,grade=$("reviewGrade").value,section=$("reviewSection").value;
+      if(!sessionToken||!date||!grade||!section){showMessage("reviewMessage","Choose date, grade and section.");return;}
+      const token=sessionToken;
+      $("reviewContent").textContent="Loading review…";
+      $("verifyReviewButton").classList.add("hidden");
+      google.script.run.withSuccessHandler(data=>{
+        if(token!==sessionToken)return;
+        showMessage("reviewMessage",data.submitted?"Attendance loaded.":"No submission found.",true);
+        renderReview(data);
+      }).withFailureHandler(reviewError).adminGetAttendanceReview(token,date,Number(grade),section);
+    }
+    $("loadReviewButton").addEventListener("click",loadReview);
+    $("verifyReviewButton").addEventListener("click",()=>{
+      if(!currentReview||!window.confirm("Verify attendance for "+currentReview.className+" on "+currentReview.date+"?"))return;
+      const button=$("verifyReviewButton");button.disabled=true;
+      google.script.run.withSuccessHandler(()=>{button.disabled=false;loadReview();})
+        .withFailureHandler(e=>{button.disabled=false;reviewError(e);})
+        .adminVerifyAttendance(sessionToken,currentReview.date,Number($("reviewGrade").value),$("reviewSection").value);
+    });
+
+
+    // ---------- ATTENDANCE ANALYSIS ----------
+    function analysisTable(title, rows, firstLabel) {
+      const section = document.createElement('section');
+      const heading = document.createElement('h3'); heading.textContent = title;
+      section.appendChild(heading);
+      if (!rows.length) {const p=document.createElement('p');p.textContent='No submitted attendance records.';section.appendChild(p);return section;}
+      const wrapper=document.createElement('div');wrapper.className='analysis-scroll';
+      const table=document.createElement('table');table.className='analysis-table';
+      const head=document.createElement('thead');const hr=document.createElement('tr');
+      [firstLabel,'Present','Absent','Late','Records','Attendance %'].forEach(t=>{const th=document.createElement('th');th.textContent=t;hr.appendChild(th);});
+      head.appendChild(hr);table.appendChild(head);
+      const body=document.createElement('tbody');
+      rows.forEach(item=>{const tr=document.createElement('tr');
+        [item.name,item.present,item.absent,item.late,item.total,item.attendancePercent+'%'].forEach(v=>{const td=document.createElement('td');td.textContent=String(v);tr.appendChild(td);});body.appendChild(tr);
+      });table.appendChild(body);wrapper.appendChild(table);section.appendChild(wrapper);return section;
+    }
+    function renderAttendanceAnalysis(data) {
+      const content=$('analysisContent');content.replaceChildren();
+      function el(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=String(txt);return n;}
+      function heading(t){content.appendChild(el('h3','smart-section-heading',t));}
+      function cards(items){const wrap=el('div','analysis-stats');items.forEach(([label,value])=>{const c=el('div','analysis-stat');c.append(el('span','',label),el('strong','',value));wrap.appendChild(c);});content.appendChild(wrap);}
+      const strength=data.studentStrength||{};
+      heading('School Student Strength');
+      cards([['Total enrolled students',strength.total??'—'],['Boys',strength.boys??'—'],['Girls',strength.girls??'—']]);
+      if(strength.grades&&strength.grades.length){
+        const section=el('section','analysis-breakdown');section.appendChild(el('h3','','Grade-wise Student Strength'));
+        const scroll=el('div','analysis-scroll'),table=el('table','analysis-table');
+        const thead=el('thead'),tr=el('tr');['Grade','Boys','Girls','Total'].forEach(x=>tr.appendChild(el('th','',x)));thead.appendChild(tr);table.appendChild(thead);
+        const tbody=el('tbody');strength.grades.forEach(r=>{const tr=el('tr');[r.grade,r.boys,r.girls,r.total].forEach(v=>tr.appendChild(el('td','',v)));tbody.appendChild(tr);});table.appendChild(tbody);scroll.appendChild(table);section.appendChild(scroll);content.appendChild(section);
+      }
+      const today=data.todayStats||{};
+      heading("Today's Attendance");
+      cards([['Present today',today.present??0],['Absent today',today.absent??0],['Late today',today.late??0],['Completed classes',data.completedToday.length],['Pending classes',data.pendingToday.length]]);
+      const tracker=el('section','submission-tracker');
+      const top=el('div','tracker-head');top.append(el('strong','',"Daily Submission Tracker"),el('span','',data.today));tracker.appendChild(top);
+      const count=(data.completedToday||[]).length+(data.pendingToday||[]).length;
+      const pct=count?Math.round(100*data.completedToday.length/count):0;
+      tracker.appendChild(el('p','tracker-count',data.completedToday.length+' of '+count+' classes submitted · '+pct+'%'));
+      const progress=el('div','tracker-progress');progress.setAttribute('role','progressbar');progress.setAttribute('aria-valuenow',pct);progress.setAttribute('aria-valuemin','0');progress.setAttribute('aria-valuemax','100');
+      const bar=el('div','tracker-progress-bar');bar.style.width=pct+'%';progress.appendChild(bar);tracker.appendChild(progress);
+      const pending=el('details','tracker-details');pending.appendChild(el('summary','',data.pendingToday.length+' pending classes'));
+      const chips=el('div','tracker-chips');(data.pendingToday||[]).forEach(cls=>chips.appendChild(el('span','tracker-chip',cls)));if(!data.pendingToday.length)chips.appendChild(el('p','','No pending classes.'));pending.appendChild(chips);tracker.appendChild(pending);
+      content.appendChild(tracker);
+      heading('Overall Attendance Analysis — '+data.year);
+      const total=data.overall.total;
+      cards([['Attendance rate',total?data.overall.attendancePercent+'%':'—'],['Present records',data.overall.present],['Absent records',data.overall.absent],['Late records',data.overall.late],['Total Class Attendance Submissions',data.overall.completedDays]]);
+      content.appendChild(el('p','subtitle','Based on '+total+' recorded student-days. Late counts as attended; pending days are excluded.'));
+      content.appendChild(analysisTable('Grade-wise Attendance',data.grades,'Grade'));
+      function genderBreakdown(title,groups,key){
+        const section=el('section','analysis-breakdown');section.appendChild(el('h3','',title));
+        if(!groups.length){section.appendChild(el('p','','No submitted attendance records.'));return section;}
+        const wrapper=el('div','analysis-scroll'),table=el('table','analysis-table');const thead=el('thead'),hr=el('tr');
+        [key==='grade'?'Grade':'Class','Boys %','Girls %','Overall %','Records'].forEach(v=>hr.appendChild(el('th','',v)));thead.appendChild(hr);table.appendChild(thead);
+        const tbody=el('tbody');groups.forEach(group=>{
+          const rows=(key==='grade'?data.gradeGenders:data.classGenders)||[];
+          const matches=rows.filter(r=>String(r[key==='grade'?'grade':'className'])===String(group.name));
+          const pct=g=>{const r=matches.find(x=>x.gender===g);return r&&r.total?r.attendancePercent+'%':'—';};
+          const tr=el('tr');[group.name,pct('Boys'),pct('Girls'),group.total?group.attendancePercent+'%':'—',group.total].forEach(v=>tr.appendChild(el('td','',v)));tbody.appendChild(tr);
+        });table.appendChild(tbody);wrapper.appendChild(table);section.appendChild(wrapper);return section;
+      }
+      content.appendChild(genderBreakdown('Gender-wise Attendance by Grade',data.grades,'grade'));
+      if(data.multiSectionClasses&&data.multiSectionClasses.length){content.appendChild(analysisTable('Section-wise Attendance',data.multiSectionClasses,'Class'));content.appendChild(genderBreakdown('Gender-wise Attendance by Section',data.multiSectionClasses,'class'));}
+    }
+    let analysisRequestId=0;
+    const analysisCache=new Map();
+    function loadAttendanceAnalysis() {
+      if (!sessionToken) return;
+      const token=sessionToken;const year=Number($('analysisYear').value);
+      const id=++analysisRequestId;
+      $('analysisRefresh').disabled=true;
+      const cached=analysisCache.get(year);
+      if(cached){renderAttendanceAnalysis(cached);showMessage('analysisMessage','Refreshing latest data in background…',true);}
+      else showMessage('analysisMessage','Loading attendance analysis…',true);
+      google.script.run.withSuccessHandler(data=>{
+        if(token!==sessionToken||id!==analysisRequestId)return;
+        $('analysisRefresh').disabled=false;
+        showMessage('analysisMessage','Analysis updated.',true);
+        analysisCache.set(year,data);
+        renderAttendanceAnalysis(data);
+      }).withFailureHandler(error=>{
+        if(token!==sessionToken||id!==analysisRequestId)return;
+        $('analysisRefresh').disabled=false;
+        showMessage('analysisMessage',error.message||'Could not load analysis.');
+      }).getAttendanceDashboard(token,year);
+    }
+    (function setupAnalysis(){
+      const year=new Date().getFullYear();
+      for(let y=year;y>=year-5;y--) $('analysisYear').add(new Option(String(y),String(y)));
+      $('analysisRefresh').addEventListener('click',loadAttendanceAnalysis);
+      $('analysisYear').addEventListener('change',loadAttendanceAnalysis);
+    })();
+
+
+    // ---------- ADMIN SCHOOL CALENDAR & TERMS ----------
+    (function initCalendarTerms(){
+      const year=new Date().getFullYear();
+      for(let y=year+1;y>=year-3;y--) $('ctYear').add(new Option(String(y),String(y)));
+      $('ctYear').value=String(year);
+      $('ctRefresh').addEventListener('click',ctLoad);
+      $('ctYear').addEventListener('change',ctLoad);
+      $('ctDayForm').addEventListener('submit',event=>{
+        event.preventDefault();
+        if(!sessionToken)return;
+        const btn=$('ctDaySave');btn.disabled=true;
+        google.script.run.withSuccessHandler(()=>{btn.disabled=false;$('ctDayForm').reset();ctLoad();})
+          .withFailureHandler(e=>{btn.disabled=false;showMessage('ctMessage',e.message||'Unable to save day');})
+          .adminSaveCalendarDay(sessionToken,$('ctDate').value,$('ctType').value,$('ctDescription').value);
+      });
+      $('ctTermForm').addEventListener('submit',event=>{
+        event.preventDefault();if(!sessionToken)return;
+        const btn=$('ctTermSave');btn.disabled=true;
+        google.script.run.withSuccessHandler(()=>{btn.disabled=false;$('ctTermForm').reset();ctLoad();})
+          .withFailureHandler(e=>{btn.disabled=false;showMessage('ctMessage',e.message||'Unable to save term');})
+          .adminSaveAcademicTerm(sessionToken,Number($('ctYear').value),$('ctTermName').value,$('ctStart').value,$('ctEnd').value);
+      });
+    })();
+    function ctLoad(){
+      if(!sessionToken||$('calendarTermsPanel').classList.contains('hidden'))return;
+      const token=sessionToken,year=$('ctYear').value;
+      showMessage('ctMessage','Loading calendar…',true);
+      google.script.run.withSuccessHandler(data=>{
+        if(token!==sessionToken||year!==$('ctYear').value)return;
+        showMessage('ctMessage','Calendar loaded.',true);
+        const days=$('ctDaysList'),terms=$('ctTermsList');days.replaceChildren();terms.replaceChildren();
+        if(!data.calendar.length)days.textContent='No calendar exceptions for this year.';
+        data.calendar.forEach(item=>{
+          const row=document.createElement('div');row.className='staff-item';
+          const label=document.createElement('span');label.textContent=item.date+' — '+item.type+' — '+item.description+' ';
+          const btn=document.createElement('button');btn.type='button';btn.className='secondary';btn.textContent='Delete';
+          btn.addEventListener('click',()=>{
+            if(!confirm('Delete calendar entry for '+item.date+'?'))return;
+            btn.disabled=true;
+            google.script.run.withSuccessHandler(ctLoad).withFailureHandler(e=>{btn.disabled=false;showMessage('ctMessage',e.message||'Delete failed');})
+              .adminDeleteCalendarDay(sessionToken,item.date);
+          });row.append(label,btn);days.appendChild(row);
+        });
+        if(!data.terms.length)terms.textContent='No terms defined for this year.';
+        data.terms.forEach(item=>{
+          const row=document.createElement('div');row.className='staff-item';
+          row.textContent=item.term+' — '+item.start+' to '+item.end;terms.appendChild(row);
+        });
+      }).withFailureHandler(e=>showMessage('ctMessage',e.message||'Unable to load calendar'))
+        .adminGetCalendarTerms(token,Number(year));
+    }
+
+
+    // ---------- ADMIN PDF REPORTS ----------
+    let rptStudents = [];
+    (function setupReports(){
+      const year=new Date().getFullYear();
+      for(let y=year;y>=year-5;y--) $('rptYear').add(new Option(String(y),String(y)));
+      $('rptYear').addEventListener('change',rptLoadOptions);
+      $('rptType').addEventListener('change',rptUpdateFilter);
+      $('rptDownload').addEventListener('click',rptDownload);
+    })();
+    function rptLoadOptions(){
+      if(!sessionToken)return;
+      const token=sessionToken,year=Number($('rptYear').value);
+      showMessage('rptMessage','Loading report options...',true);
+      google.script.run.withSuccessHandler(data=>{
+        if(token!==sessionToken||year!==Number($('rptYear').value))return;
+        rptStudents=data.students||[];
+        const term=$('rptTerm');term.replaceChildren(new Option('Full Year','ALL'));
+        (data.terms||[]).forEach(t=>term.add(new Option(t,t)));
+        rptUpdateFilter();showMessage('rptMessage','Choose a report and generate it.',true);
+      }).withFailureHandler(e=>showMessage('rptMessage',e.message||'Unable to load options'))
+        .getAttendanceReportOptions(token,year);
+    }
+    function rptUpdateFilter(){
+      const type=$('rptType').value,box=$('rptFilterBox'),filter=$('rptFilter');
+      box.classList.toggle('hidden',type==='SCHOOL'||type==='SCHOOL_ZIP');
+      filter.replaceChildren();
+      const label=box.querySelector('label');
+      if(type==='STUDENT'){
+        label.textContent='Student';
+        rptStudents.forEach(s=>filter.add(new Option(s.name+' ('+s.id+', '+s.cls+')',s.id)));
+      }else if(type==='CLASS'){
+        label.textContent='Class';
+        [...new Set(rptStudents.map(s=>s.cls))].filter(Boolean).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(c=>filter.add(new Option(c,c)));
+      }else if(type==='GRADE'||type==='GRADE_ZIP'){
+        label.textContent='Grade';
+        for(let g=1;g<=13;g++)filter.add(new Option('Grade '+g,String(g)));
+      }
+    }
+    function rptDownload(){
+      if(!sessionToken)return;
+      const token=sessionToken,btn=$('rptDownload');btn.disabled=true;
+      showMessage('rptMessage','Generating report. Please wait...',true);
+      google.script.run.withSuccessHandler(result=>{
+        if(token!==sessionToken)return;
+        btn.disabled=false;
+        try{
+          const binary=atob(result.base64),bytes=new Uint8Array(binary.length);
+          for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+          const blob=new Blob([bytes],{type:result.mime});
+          const url=URL.createObjectURL(blob),link=document.createElement('a');
+          link.href=url;link.download=result.filename;document.body.appendChild(link);link.click();link.remove();
+          setTimeout(()=>URL.revokeObjectURL(url),30000);
+          showMessage('rptMessage','Report generated successfully.',true);
+        }catch(e){showMessage('rptMessage','Could not download: '+e.message);}
+      }).withFailureHandler(e=>{btn.disabled=false;showMessage('rptMessage',e.message||'Report failed');})
+        .generateAttendanceReport(token,Number($('rptYear').value),$('rptTerm').value,$('rptType').value,$('rptFilter').value);
+    }
+
+
+    // ---------- STUDENT AND CLASS MANAGEMENT ----------
+    for(let g=1;g<=13;g++) $('smGrade').add(new Option('Grade '+g,String(g)));
+    $('smGrade').value='1';
+    $('smAdmitted').value=new Date().toLocaleDateString('en-CA');
+    $('smLeaveDate').value=new Date().toLocaleDateString('en-CA');
+    function smStatus(message,ok=false){showMessage('smMessage',message,ok);}
+    function smLoad(){
+      if(!sessionToken)return;
+      const token=sessionToken,grade=Number($('smGrade').value);
+      smStatus('Loading register...',true);
+      google.script.run.withSuccessHandler(data=>{
+        if(token!==sessionToken||grade!==Number($('smGrade').value))return;
+        const section=$('smSection');section.replaceChildren();
+        (data.classes||[]).filter(c=>c.active).forEach(c=>section.add(new Option(c.name,c.section)));
+        const box=$('smRegister');box.replaceChildren();
+        const table=document.createElement('table');table.className='attendance-table';
+        const head=document.createElement('tr');
+        ['Student ID','Name','Class','Roll','Active'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.appendChild(th);});
+        table.appendChild(head);
+        (data.students||[]).forEach(st=>{
+          const tr=document.createElement('tr');
+          [st.id,st.name,st.grade+st.section,st.roll,st.active?'Yes':'No'].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});
+          table.appendChild(tr);
+        });
+        const wrap=document.createElement('div');wrap.className='attendance-table-wrapper';wrap.appendChild(table);box.appendChild(wrap);
+        smStatus((data.students||[]).length+' students loaded.',true);
+      }).withFailureHandler(e=>smStatus(e.message||'Unable to load register')).smList(token,grade);
+    }
+    $('smGrade').addEventListener('change',smLoad);
+    $('smRefresh').addEventListener('click',smLoad);
+    $('smClassForm').addEventListener('submit',e=>{
+      e.preventDefault();if(!sessionToken)return;
+      smStatus('Saving class...',true);
+      google.script.run.withSuccessHandler(()=>{smStatus('Section added.',true);$('smClassForm').reset();smLoad();})
+        .withFailureHandler(err=>smStatus(err.message||'Failed to add section'))
+        .smAddClass(sessionToken,Number($('smGrade').value),$('smNewSection').value.trim().toUpperCase());
+    });
+    $('smStudentForm').addEventListener('submit',e=>{
+      e.preventDefault();if(!sessionToken)return;
+      const s={grade:Number($('smGrade').value),section:$('smSection').value,name:$('smName').value,admission:$('smAdmission').value,roll:$('smRoll').value,gender:$('smGender').value,admitted:$('smAdmitted').value};
+      smStatus('Saving student...',true);
+      google.script.run.withSuccessHandler(r=>{smStatus('Student created: '+r.id,true);$('smStudentForm').reset();smLoad();})
+        .withFailureHandler(err=>smStatus(err.message||'Failed to add student')).smAddStudent(sessionToken,s);
+    });
+    $('smLeaveForm').addEventListener('submit',e=>{
+      e.preventDefault();if(!sessionToken)return;
+      if(!confirm('Mark this student inactive? Historical attendance will remain.'))return;
+      smStatus('Updating enrollment...',true);
+      google.script.run.withSuccessHandler(()=>{smStatus('Student marked inactive.',true);$('smLeaveForm').reset();smLoad();})
+        .withFailureHandler(err=>smStatus(err.message||'Failed to update student'))
+        .smDeactivateStudent(sessionToken,$('smLeaveId').value.trim(),$('smLeaveDate').value,$('smLeaveReason').value.trim());
+    });
+
+
+    // Student editing and limited transfer
+    for(let g=1;g<=13;g++) $('smTransferGrade').add(new Option('Grade '+g,String(g)));
+    $('smTransferDate').value=new Date().toLocaleDateString('en-CA');
+    $('smEditForm').addEventListener('submit',e=>{
+      e.preventDefault();if(!sessionToken)return;
+      const data={name:$('smEditName').value,gender:$('smEditGender').value,roll:$('smEditRoll').value};
+      smStatus('Saving student changes...',true);
+      google.script.run.withSuccessHandler(()=>{smStatus('Student details updated.',true);$('smEditForm').reset();smLoad();})
+        .withFailureHandler(err=>smStatus(err.message||'Unable to edit student'))
+        .smEditStudent(sessionToken,$('smEditId').value.trim(),data,$('smEditReason').value.trim());
+    });
+    $('smTransferForm').addEventListener('submit',e=>{
+      e.preventDefault();if(!sessionToken)return;
+      if(!confirm('Transfer this student? Only students without attendance history are eligible.'))return;
+      smStatus('Checking transfer...',true);
+      google.script.run.withSuccessHandler(()=>{smStatus('Student transferred.',true);$('smTransferForm').reset();smLoad();})
+        .withFailureHandler(err=>smStatus(err.message||'Transfer blocked'))
+        .smTransferStudent(sessionToken,$('smTransferId').value.trim(),Number($('smTransferGrade').value),$('smTransferSection').value.trim().toUpperCase(),$('smTransferDate').value,$('smTransferReason').value.trim());
+    });
+
+    initializeAttendance();
+
+    // Workspace navigation: one content section visible at a time.
+    // Keep .hidden for permissions and original asynchronous data-loading checks.
+    const workspaceIds = [
+      "analysisPanel", "dailyAttendancePanel", "adminReviewPanel",
+      "reportsPanel", "smPanel", "calendarTermsPanel", "teacherManagement"
+    ];
+    const adminWorkspaceIds = [
+      "adminReviewPanel", "reportsPanel", "smPanel",
+      "calendarTermsPanel", "teacherManagement"
+    ];
+
+    function refreshQuickNavigation() {
+      const isAdmin = $("roleBadge").textContent.trim() === "ADMIN";
+      document.querySelectorAll("#appQuickNav button[data-target]").forEach(button => {
+        const restricted = adminWorkspaceIds.includes(button.dataset.target);
+        button.classList.toggle("hidden", restricted && !isAdmin);
+      });
+    }
+
+    function activateWorkspaceTab(targetId) {
+      const isAdmin = $("roleBadge").textContent.trim() === "ADMIN";
+      if (!workspaceIds.includes(targetId)) return;
+      if (adminWorkspaceIds.includes(targetId) && !isAdmin) return;
+
+      const target = $(targetId);
+      if (!target) return;
+      // The teacher panel is lazy-initialized by the existing management handler.
+      if (targetId === "teacherManagement" && target.classList.contains("hidden")) {
+        $("manageTeachersButton").click();
+      }
+      if (target.classList.contains("hidden")) return;
+      if(targetId==="teacherManagement") loadStaff();
+
+      workspaceIds.forEach(id => {
+        $(id).classList.toggle("workspace-inactive", id !== targetId);
+      });
+      document.querySelectorAll("#appQuickNav button[data-target]").forEach(button => {
+        const active = button.dataset.target === targetId;
+        button.classList.toggle("nav-active", active);
+        if (active) button.setAttribute("aria-current", "page");
+        else button.removeAttribute("aria-current");
+      });
+      window.scrollTo({top:0,behavior:"instant"});
+    }
+
+    $("appQuickNav").addEventListener("click", event => {
+      const button = event.target.closest("button[data-target]");
+      if (!button || button.classList.contains("hidden")) return;
+      activateWorkspaceTab(button.dataset.target);
+    });
+
+    // Appearance preference: safe fallback when browser storage is unavailable.
+    function applyTheme(theme) {
+      const dark = theme === "dark";
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      $("themeToggleText").textContent = dark ? "Light mode" : "Dark mode";
+      $("themeToggle").querySelector(".theme-icon").textContent = dark ? "☀" : "☾";
+      $("themeToggle").setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+      $("themeToggle").setAttribute("aria-pressed", String(dark));
+    }
+    let preferredTheme = "light";
+    try { preferredTheme = localStorage.getItem("attendance-theme") === "dark" ? "dark" : "light"; } catch (error) {}
+    applyTheme(preferredTheme);
+    $("themeToggle").addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      applyTheme(next);
+      try { localStorage.setItem("attendance-theme", next); } catch (error) {}
+    });
+  </script>
+</body>
+</html>
