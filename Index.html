@@ -432,6 +432,39 @@
     [data-theme="dark"] .submission-tracker{background:#22334b}[data-theme="dark"] .tracker-chip{background:#514121;color:#ffe0a1;border-color:#806637}
     [data-theme="dark"] .staff-status.active{background:#164e36;color:#bbf7d0}[data-theme="dark"] .staff-status.inactive{background:#334155;color:#cbd5e1}
     
+
+    .teacher-overview-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .teacher-metric-grid,.teacher-balance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}
+    .teacher-metric,.teacher-balance-card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:18px;box-shadow:0 5px 18px #243f630d;min-width:0}
+    .teacher-metric span,.teacher-balance-card span,.teacher-identity-card span{display:block;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.2px}
+    .teacher-metric strong{display:block;font-size:30px;line-height:1.25;margin:10px 0 5px;color:var(--text)}
+    .teacher-metric small{display:block;color:var(--muted);font-size:11px;line-height:1.4}
+    .teacher-balance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .teacher-balance-card>div{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .teacher-balance-card strong{font-size:20px;color:var(--text)}
+    .teacher-balance-card p,.teacher-form-help{font-size:13px;color:var(--muted);line-height:1.5;margin:10px 0}
+    .teacher-progress{height:8px;border-radius:999px;background:#e8eef6;overflow:hidden}
+    .teacher-progress span{display:block;height:100%;width:0;background:#2563eb;border-radius:999px;transition:width .2s}
+    .teacher-identity-card{display:flex;gap:30px;flex-wrap:wrap;background:#eff6ff;border:1px solid #dbeafe;border-radius:13px;padding:15px 18px;margin:18px 0}
+    .teacher-identity-card strong{display:block;margin-top:5px;color:#1e3a8a}
+    .teacher-attendance-form{max-width:650px}
+    .teacher-period-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:8px}
+    .teacher-period-grid label{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border);border-radius:9px;margin:0;font-size:13px;background:var(--surface)}
+    .teacher-period-grid input{width:17px;height:17px;margin:0;flex:0 0 auto}
+    .teacher-form-help{margin:8px 0 0}
+    .teacher-locked-notice{margin-top:16px;padding:14px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:14px;line-height:1.5}
+    .teacher-record-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .teacher-record-row:last-child{border-bottom:0}
+    .teacher-record-meta{color:var(--muted);margin-top:4px}
+    [data-theme="dark"] .teacher-metric,[data-theme="dark"] .teacher-balance-card{background:var(--surface);border-color:var(--border)}
+    [data-theme="dark"] .teacher-identity-card{background:#1d3555;border-color:#34547d}
+    [data-theme="dark"] .teacher-identity-card strong{color:#dbeafe}
+    [data-theme="dark"] .teacher-period-grid label{background:var(--surface);border-color:var(--border)}
+    [data-theme="dark"] .teacher-locked-notice{background:#422b1b;border-color:#8a542b;color:#fed7aa}
+    @media(max-width:850px){.teacher-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:520px){.teacher-metric-grid,.teacher-balance-grid{grid-template-columns:1fr}.teacher-period-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.teacher-metric strong{font-size:26px}}
+
+    .policy-form{max-width:900px}.policy-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px}.policy-note{margin-top:24px;padding:16px 18px;border:1px solid #dbeafe;background:#f4f8ff;border-radius:12px;color:#334155;font-size:13px;line-height:1.6}.policy-note ul{margin:8px 0 0;padding-left:20px}.policy-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}[data-theme="dark"] .policy-note{background:#1d3555;border-color:#34547d;color:#d7e5fa}@media(max-width:650px){.policy-grid{grid-template-columns:1fr}}
   </style>
 </head>
 
@@ -543,13 +576,16 @@
 
     <nav id="appQuickNav" class="app-nav" aria-label="Application sections">
       <span class="nav-label">Workspace</span>
-      <button type="button" data-target="analysisPanel">Overview</button>
+      <button type="button" data-target="analysisPanel" data-nav-role="admin">Overview</button>
+      <button type="button" data-target="teacherOverviewPanel" data-nav-role="teacher" class="hidden">Overview</button>
       <button type="button" data-target="dailyAttendancePanel">Daily Attendance</button>
+      <button type="button" data-target="teacherAttendancePanel" data-nav-role="teacher" class="hidden">Mark Attendance</button>
       <button type="button" data-target="adminReviewPanel">Verification</button>
       <button type="button" data-target="reportsPanel">Reports</button>
       <button type="button" data-target="smPanel">Students & Classes</button>
       <button type="button" data-target="calendarTermsPanel">Calendar & Terms</button>
       <button type="button" data-target="teacherManagement">Teachers</button>
+      <button type="button" data-target="leavePolicyPanel" data-nav-role="admin" class="hidden">Leave Policies</button>
     </nav>
 
     <!-- USER INFORMATION -->
@@ -759,6 +795,80 @@
       <div id="analysisContent"></div>
     </section>
 
+    <!-- TEACHER OVERVIEW: visible only to teacher accounts -->
+    <section id="teacherOverviewPanel" class="panel hidden">
+      <div class="teacher-overview-heading">
+        <div>
+          <h2>My Attendance Overview</h2>
+          <p class="subtitle">Your attendance and leave summary for the active policy period.</p>
+        </div>
+        <button type="button" class="secondary" id="teacherSummaryRefresh">Refresh</button>
+      </div>
+      <div class="teacher-metric-grid" id="teacherMetricGrid">
+        <article class="teacher-metric"><span>Total Working Days</span><strong id="teacherWorkingDays">—</strong><small>In the current policy period</small></article>
+        <article class="teacher-metric"><span>Present Days</span><strong id="teacherPresentDays">—</strong><small>Full present days recorded</small></article>
+        <article class="teacher-metric"><span>Leaves Taken</span><strong id="teacherLeavesTaken">—</strong><small>Absent, half-day and short-leave records</small></article>
+        <article class="teacher-metric"><span>Personal Deductions</span><strong id="teacherPersonalDeductions">—</strong><small>Absence units; short leave tracked separately</small></article>
+      </div>
+      <div class="teacher-balance-grid">
+        <article class="teacher-balance-card">
+          <div><span>Personal Absence Allowance</span><strong id="teacherAbsenceBalance">—</strong></div>
+          <p id="teacherAbsenceUsage">Loading your absence balance…</p>
+          <div class="teacher-progress"><span id="teacherAbsenceProgress"></span></div>
+        </article>
+        <article class="teacher-balance-card">
+          <div><span>Personal Short-Leave Allowance</span><strong id="teacherShortBalance">—</strong></div>
+          <p id="teacherShortUsage">Loading your short-leave balance…</p>
+          <div class="teacher-progress"><span id="teacherShortProgress"></span></div>
+        </article>
+      </div>
+      <p id="teacherSummaryMessage" class="message" role="status"></p>
+      <h3>Recent Attendance Records</h3>
+      <div id="teacherRecentRecords" class="teacher-record-list"><p class="subtitle">Your records will appear here.</p></div>
+    </section>
+
+    <!-- TEACHER SELF ATTENDANCE -->
+    <section id="teacherAttendancePanel" class="panel hidden">
+      <h2>Mark Your Attendance</h2>
+      <p class="subtitle">Submit your own attendance for today. Your identity is taken from your signed-in teacher account.</p>
+      <div class="teacher-identity-card">
+        <div><span>Teacher</span><strong id="teacherSelfName">—</strong></div>
+        <div><span>Teacher ID</span><strong id="teacherSelfId">—</strong></div>
+      </div>
+      <form id="teacherAttendanceForm" class="teacher-attendance-form">
+        <div>
+          <label for="teacherSelfStatus">Attendance Status</label>
+          <select id="teacherSelfStatus" required>
+            <option value="PRESENT">Present</option>
+            <option value="ABSENT">Absent</option>
+            <option value="HALF DAY">Half Day</option>
+            <option value="SHORT LEAVE">Short Leave</option>
+          </select>
+        </div>
+        <div id="teacherHalfDayField" class="hidden">
+          <label for="teacherHalfDay">Half Day</label>
+          <select id="teacherHalfDay"><option value="">Select half</option><option value="FIRST HALF">1st Half</option><option value="SECOND HALF">2nd Half</option></select>
+        </div>
+        <div id="teacherShortLeaveField" class="hidden">
+          <label>Short-Leave Periods</label>
+          <div class="teacher-period-grid" id="teacherPeriodChoices">
+            <label><input type="checkbox" value="1"> Period 1</label><label><input type="checkbox" value="2"> Period 2</label>
+            <label><input type="checkbox" value="3"> Period 3</label><label><input type="checkbox" value="4"> Period 4</label>
+            <label><input type="checkbox" value="5"> Period 5</label><label><input type="checkbox" value="6"> Period 6</label>
+            <label><input type="checkbox" value="7"> Period 7</label><label><input type="checkbox" value="8"> Period 8</label>
+          </div>
+        </div>
+        <div id="teacherReasonField" class="hidden">
+          <label for="teacherReasonCategory">Reason Category</label>
+          <select id="teacherReasonCategory"><option value="">Select reason category</option><option value="PERSONAL">Personal</option><option value="OFFICIAL">Official</option></select>
+          <p class="teacher-form-help">Personal leave is counted against your configured allowance. Official leave is recorded separately and does not consume personal limits.</p>
+        </div>
+        <p id="teacherAttendanceMessage" class="message" role="status"></p>
+        <button type="submit" id="teacherAttendanceSubmit" class="full">Submit My Attendance</button>
+      </form>
+      <div id="teacherAttendanceLocked" class="teacher-locked-notice hidden">You have already submitted your attendance today. Contact an administrator if a correction is required.</div>
+    </section>
+
     <!-- DAILY ATTENDANCE -->
     <div id="dailyAttendancePanel" class="panel">
       <h2>Daily Attendance</h2>
@@ -808,6 +918,28 @@
         Select a class and check the attendance before submitting. Once submitted, teachers cannot edit it.
       </div>
     </div>
+
+    <!-- ADMIN LEAVE POLICY SETTINGS -->
+    <section id="leavePolicyPanel" class="panel hidden">
+      <h2>Teacher Leave Policies</h2>
+      <p class="subtitle">Configure the leave limits and warning rules for teacher self-attendance. Blank limits mean unlimited.</p>
+      <form id="leavePolicyForm" class="policy-form">
+        <div class="policy-grid">
+          <div><label for="policyPeriodType">Policy period</label><select id="policyPeriodType" required><option value="MONTHLY">Monthly</option><option value="TERM">Academic term</option><option value="YEARLY">Yearly</option><option value="CUSTOM">Custom date range</option></select></div>
+          <div><label for="policyAbsenceLimit">Personal absence limit</label><input id="policyAbsenceLimit" type="number" min="0" step="0.5" placeholder="e.g. 3 (blank = unlimited)"></div>
+          <div><label for="policyShortLimit">Personal short-leave limit</label><input id="policyShortLimit" type="number" min="0" step="1" placeholder="e.g. 4 (blank = unlimited)"></div>
+          <div><label for="policyShortCounting">Short-leave counting method</label><select id="policyShortCounting"><option value="OCCURRENCES">Count each short-leave submission</option><option value="PERIODS">Count selected periods</option></select></div>
+          <div id="policyCustomStartWrap" class="hidden"><label for="policyCustomStart">Custom period starts</label><input id="policyCustomStart" type="date"></div>
+          <div id="policyCustomEndWrap" class="hidden"><label for="policyCustomEnd">Custom period ends</label><input id="policyCustomEnd" type="date"></div>
+          <div><label for="policyWarningPercent">Warning threshold (%)</label><input id="policyWarningPercent" type="number" min="1" max="100" step="1" required></div>
+          <div><label for="policyExceedAction">When a limit is exceeded</label><select id="policyExceedAction"><option value="WARN">Allow submission and show warning</option><option value="BLOCK">Block personal leave submission</option></select></div>
+          <div><label for="policyHalfDayUnits">Half-day absence deduction</label><select id="policyHalfDayUnits"><option value="0.5">0.5 day</option><option value="1">1 full day</option><option value="0">No absence deduction</option></select></div>
+        </div>
+        <div class="policy-note"><strong>Policy notes</strong><ul><li>Personal absences and personal short leaves have separate counters.</li><li>Official leave is recorded but does not consume personal leave allowances.</li><li>Changing the policy does not delete previous attendance records.</li><li>Teachers see their own usage, remaining allowance and warning messages.</li></ul></div>
+        <p id="leavePolicyMessage" class="message" role="status"></p>
+        <div class="policy-actions"><button type="submit" id="saveLeavePolicyButton">Save Leave Policy</button><button type="button" class="secondary" id="reloadLeavePolicyButton">Reload Settings</button></div>
+      </form>
+    </section>
 
   </section>
 
@@ -867,6 +999,9 @@
 
       clearAttendance();
       $("teacherManagement").classList.add("hidden");
+      $("teacherOverviewPanel").classList.add("hidden");
+      $("teacherAttendancePanel").classList.add("hidden");
+      $("leavePolicyPanel").classList.add("hidden");
       $("adminNavigation").classList.add("hidden");
       $("adminReviewPanel").classList.add("hidden");
       $("reportsPanel").classList.add("hidden");
@@ -1029,6 +1164,7 @@
           $("reportsPanel").classList.toggle("hidden", !isAdmin);
           if (isAdmin) rptLoadOptions();
           $("calendarTermsPanel").classList.toggle("hidden", !isAdmin);
+          $("leavePolicyPanel").classList.toggle("hidden", !isAdmin);
           if(isAdmin) ctLoad();
 
           $("adminNavigation").classList.toggle(
@@ -1037,11 +1173,19 @@
           );
 
           $("teacherManagement").classList.add("hidden");
+          $("analysisPanel").classList.toggle("hidden", !isAdmin);
+          $("teacherOverviewPanel").classList.toggle("hidden", isAdmin);
+          $("teacherAttendancePanel").classList.toggle("hidden", isAdmin);
+          if (!isAdmin) {
+            $("teacherSelfName").textContent = user.name || "—";
+            $("teacherSelfId").textContent = user.staffId || "—";
+          }
 
           clearAttendance();
           showScreen("dashboardScreen");
-          activateWorkspaceTab("analysisPanel");
-          loadAttendanceAnalysis();
+          activateWorkspaceTab(isAdmin ? "analysisPanel" : "teacherOverviewPanel");
+          if (isAdmin) loadAttendanceAnalysis();
+          else loadTeacherAttendanceSummary();
         })
         .withFailureHandler(error => {
           clearSession();
@@ -1952,19 +2096,22 @@
     // Workspace navigation: one content section visible at a time.
     // Keep .hidden for permissions and original asynchronous data-loading checks.
     const workspaceIds = [
-      "analysisPanel", "dailyAttendancePanel", "adminReviewPanel",
-      "reportsPanel", "smPanel", "calendarTermsPanel", "teacherManagement"
+      "analysisPanel", "teacherOverviewPanel", "dailyAttendancePanel", "teacherAttendancePanel",
+      "adminReviewPanel", "reportsPanel", "smPanel", "calendarTermsPanel", "teacherManagement", "leavePolicyPanel"
     ];
     const adminWorkspaceIds = [
-      "adminReviewPanel", "reportsPanel", "smPanel",
-      "calendarTermsPanel", "teacherManagement"
+      "analysisPanel", "adminReviewPanel", "reportsPanel", "smPanel",
+      "calendarTermsPanel", "teacherManagement", "leavePolicyPanel"
     ];
+    const teacherWorkspaceIds = ["teacherOverviewPanel", "teacherAttendancePanel"];
 
     function refreshQuickNavigation() {
       const isAdmin = $("roleBadge").textContent.trim() === "ADMIN";
       document.querySelectorAll("#appQuickNav button[data-target]").forEach(button => {
-        const restricted = adminWorkspaceIds.includes(button.dataset.target);
-        button.classList.toggle("hidden", restricted && !isAdmin);
+        const target = button.dataset.target;
+        const adminOnly = adminWorkspaceIds.includes(target);
+        const teacherOnly = teacherWorkspaceIds.includes(target);
+        button.classList.toggle("hidden", (adminOnly && !isAdmin) || (teacherOnly && isAdmin));
       });
     }
 
@@ -1972,6 +2119,7 @@
       const isAdmin = $("roleBadge").textContent.trim() === "ADMIN";
       if (!workspaceIds.includes(targetId)) return;
       if (adminWorkspaceIds.includes(targetId) && !isAdmin) return;
+      if (teacherWorkspaceIds.includes(targetId) && isAdmin) return;
 
       const target = $(targetId);
       if (!target) return;
@@ -1981,6 +2129,8 @@
       }
       if (target.classList.contains("hidden")) return;
       if(targetId==="teacherManagement") loadStaff();
+      if(targetId==="teacherOverviewPanel" || targetId==="teacherAttendancePanel") loadTeacherAttendanceSummary();
+      if(targetId==="leavePolicyPanel") loadTeacherLeavePolicy();
 
       workspaceIds.forEach(id => {
         $(id).classList.toggle("workspace-inactive", id !== targetId);
@@ -1998,6 +2148,189 @@
       const button = event.target.closest("button[data-target]");
       if (!button || button.classList.contains("hidden")) return;
       activateWorkspaceTab(button.dataset.target);
+    });
+
+    // ---------- ADMIN TEACHER LEAVE POLICY ----------
+    function policyToggleCustomDates() {
+      const custom = $("policyPeriodType").value === "CUSTOM";
+      $("policyCustomStartWrap").classList.toggle("hidden", !custom);
+      $("policyCustomEndWrap").classList.toggle("hidden", !custom);
+      $("policyCustomStart").required = custom;
+      $("policyCustomEnd").required = custom;
+    }
+
+    function loadTeacherLeavePolicy() {
+      if (!sessionToken || $("roleBadge").textContent.trim() !== "ADMIN") return;
+      const token = sessionToken;
+      $("reloadLeavePolicyButton").disabled = true;
+      $("reloadLeavePolicyButton").textContent = "Loading…";
+      showMessage("leavePolicyMessage", "Loading leave policy…", true);
+      google.script.run.withSuccessHandler(policy => {
+        if (token !== sessionToken) return;
+        $("policyPeriodType").value = policy.periodType || "MONTHLY";
+        $("policyAbsenceLimit").value = policy.absenceLimit == null ? "" : policy.absenceLimit;
+        $("policyShortLimit").value = policy.shortLeaveLimit == null ? "" : policy.shortLeaveLimit;
+        $("policyShortCounting").value = policy.shortLeaveCounting || "OCCURRENCES";
+        $("policyCustomStart").value = policy.customStart || "";
+        $("policyCustomEnd").value = policy.customEnd || "";
+        $("policyWarningPercent").value = policy.warningPercent || 75;
+        $("policyExceedAction").value = policy.exceedAction || "WARN";
+        $("policyHalfDayUnits").value = String(policy.halfDayAbsenceUnits == null ? 0.5 : policy.halfDayAbsenceUnits);
+        policyToggleCustomDates();
+        $("reloadLeavePolicyButton").disabled = false;
+        $("reloadLeavePolicyButton").textContent = "Reload Settings";
+        showMessage("leavePolicyMessage", "Current leave policy loaded.", true);
+      }).withFailureHandler(error => {
+        if (token !== sessionToken) return;
+        $("reloadLeavePolicyButton").disabled = false;
+        $("reloadLeavePolicyButton").textContent = "Reload Settings";
+        showMessage("leavePolicyMessage", error.message || "Unable to load leave policy.");
+      }).adminGetTeacherLeavePolicy(token);
+    }
+
+    $("policyPeriodType").addEventListener("change", policyToggleCustomDates);
+    $("reloadLeavePolicyButton").addEventListener("click", loadTeacherLeavePolicy);
+    $("leavePolicyForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!sessionToken) return;
+      const periodType = $("policyPeriodType").value;
+      const data = {
+        periodType,
+        absenceLimit: $("policyAbsenceLimit").value.trim(),
+        shortLeaveLimit: $("policyShortLimit").value.trim(),
+        shortLeaveCounting: $("policyShortCounting").value,
+        customStart: $("policyCustomStart").value,
+        customEnd: $("policyCustomEnd").value,
+        warningPercent: Number($("policyWarningPercent").value),
+        exceedAction: $("policyExceedAction").value,
+        halfDayAbsenceUnits: Number($("policyHalfDayUnits").value)
+      };
+      if (periodType === "CUSTOM" && (!data.customStart || !data.customEnd || data.customStart > data.customEnd)) {
+        showMessage("leavePolicyMessage", "Choose a valid custom start and end date."); return;
+      }
+      const button = $("saveLeavePolicyButton");
+      button.disabled = true; button.textContent = "Saving…";
+      const token = sessionToken;
+      google.script.run.withSuccessHandler(result => {
+        if (token !== sessionToken) return;
+        button.disabled = false; button.textContent = "Save Leave Policy";
+        showMessage("leavePolicyMessage", result.message || "Leave policy saved.", true);
+      }).withFailureHandler(error => {
+        if (token !== sessionToken) return;
+        button.disabled = false; button.textContent = "Save Leave Policy";
+        showMessage("leavePolicyMessage", error.message || "Unable to save leave policy.");
+      }).adminSaveTeacherLeavePolicy(token, data);
+    });
+    policyToggleCustomDates();
+
+    // ---------- TEACHER SELF-ATTENDANCE ----------
+    function teacherToggleFields() {
+      const status = $("teacherSelfStatus").value;
+      const needsLeave = status !== "PRESENT";
+      $("teacherHalfDayField").classList.toggle("hidden", status !== "HALF DAY");
+      $("teacherShortLeaveField").classList.toggle("hidden", status !== "SHORT LEAVE");
+      $("teacherReasonField").classList.toggle("hidden", !needsLeave);
+      $("teacherHalfDay").required = status === "HALF DAY";
+      $("teacherReasonCategory").required = needsLeave;
+      document.querySelectorAll('#teacherPeriodChoices input[type="checkbox"]').forEach(input => {
+        input.required = false;
+      });
+    }
+
+    function teacherRenderSummary(data) {
+      $("teacherWorkingDays").textContent = data.totalWorkingDays == null ? "—" : data.totalWorkingDays;
+      $("teacherPresentDays").textContent = data.presentDays == null ? "—" : data.presentDays;
+      $("teacherLeavesTaken").textContent = data.leavesTaken == null ? "—" : data.leavesTaken;
+      $("teacherPersonalDeductions").textContent = data.personalDeductions == null ? "—" : Number(data.personalDeductions).toFixed(2).replace(/\.00$/, "");
+
+      const counts = data.counts || {};
+      const absenceLimit = data.absenceLimit;
+      const absenceUsed = Number(counts.absenceUnits || 0);
+      const absenceLabel = absenceLimit == null ? "No limit configured" : absenceUsed + " / " + absenceLimit + " units used";
+      $("teacherAbsenceBalance").textContent = absenceLimit == null ? "Unlimited" : Math.max(0, Number(absenceLimit) - absenceUsed) + " remaining";
+      $("teacherAbsenceUsage").textContent = absenceLabel;
+      $("teacherAbsenceProgress").style.width = absenceLimit == null || Number(absenceLimit) <= 0 ? "0%" : Math.min(100, absenceUsed / Number(absenceLimit) * 100) + "%";
+
+      const shortLimit = data.shortLeaveLimit;
+      const shortUsed = Number(counts.shortLeaveCount || 0);
+      const shortUnit = String(data.shortLeaveCounting || "OCCURRENCES").toUpperCase() === "PERIODS" ? "periods" : "occurrences";
+      $("teacherShortBalance").textContent = shortLimit == null ? "Unlimited" : Math.max(0, Number(shortLimit) - shortUsed) + " remaining";
+      $("teacherShortUsage").textContent = shortLimit == null ? "No limit configured" : shortUsed + " / " + shortLimit + " " + shortUnit + " used";
+      $("teacherShortProgress").style.width = shortLimit == null || Number(shortLimit) <= 0 ? "0%" : Math.min(100, shortUsed / Number(shortLimit) * 100) + "%";
+
+      const list = $("teacherRecentRecords");
+      list.replaceChildren();
+      const records = Array.isArray(data.records) ? data.records.slice(0, 8) : [];
+      if (!records.length) {
+        const empty = document.createElement("p"); empty.className = "subtitle"; empty.textContent = "No teacher attendance records in this policy period."; list.appendChild(empty);
+      } else records.forEach(record => {
+        const row = document.createElement("div"); row.className = "teacher-record-row";
+        const left = document.createElement("div");
+        const title = document.createElement("strong"); title.textContent = record.status;
+        const meta = document.createElement("div"); meta.className = "teacher-record-meta";
+        meta.textContent = [record.leaveType, record.reasonCategory].filter(Boolean).join(" · ") || "Regular attendance";
+        left.append(title, meta);
+        const date = document.createElement("span"); date.textContent = record.date;
+        row.append(left, date); list.appendChild(row);
+      });
+
+      const locked = Boolean(data.todaySubmitted);
+      $("teacherAttendanceSubmit").disabled = locked;
+      $("teacherSelfStatus").disabled = locked;
+      $("teacherHalfDay").disabled = locked;
+      $("teacherReasonCategory").disabled = locked;
+      document.querySelectorAll('#teacherPeriodChoices input[type="checkbox"]').forEach(input => input.disabled = locked);
+      $("teacherAttendanceLocked").classList.toggle("hidden", !locked);
+      if (locked) showMessage("teacherAttendanceMessage", "Your attendance has already been submitted today.", true);
+    }
+
+    function loadTeacherAttendanceSummary() {
+      if (!sessionToken) return;
+      const token = sessionToken;
+      showMessage("teacherSummaryMessage", "Loading your attendance summary…", true);
+      google.script.run.withSuccessHandler(data => {
+        if (token !== sessionToken) return;
+        teacherRenderSummary(data);
+        showMessage("teacherSummaryMessage", "Attendance summary updated for " + data.periodLabel + ".", true);
+      }).withFailureHandler(error => {
+        if (token !== sessionToken) return;
+        showMessage("teacherSummaryMessage", error.message || "Unable to load your attendance summary.");
+      }).getTeacherAttendanceSummary(token);
+    }
+
+    $("teacherSelfStatus").addEventListener("change", teacherToggleFields);
+    $("teacherSummaryRefresh").addEventListener("click", loadTeacherAttendanceSummary);
+    teacherToggleFields();
+    $("teacherAttendanceForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!sessionToken) return;
+      const status = $("teacherSelfStatus").value;
+      const data = { status };
+      if (status === "HALF DAY") data.halfDay = $("teacherHalfDay").value;
+      if (status === "SHORT LEAVE") {
+        data.periods = Array.from(document.querySelectorAll('#teacherPeriodChoices input[type="checkbox"]:checked')).map(input => Number(input.value));
+        if (!data.periods.length) { showMessage("teacherAttendanceMessage", "Select at least one short-leave period."); return; }
+      }
+      if (status !== "PRESENT") data.reasonCategory = $("teacherReasonCategory").value;
+      if (status === "HALF DAY" && !data.halfDay) { showMessage("teacherAttendanceMessage", "Select 1st Half or 2nd Half."); return; }
+      if (status !== "PRESENT" && !data.reasonCategory) { showMessage("teacherAttendanceMessage", "Select Personal or Official."); return; }
+
+      const button = $("teacherAttendanceSubmit");
+      button.disabled = true; button.textContent = "Submitting…";
+      showMessage("teacherAttendanceMessage", "Submitting your attendance…", true);
+      const token = sessionToken;
+      google.script.run.withSuccessHandler(result => {
+        if (token !== sessionToken) return;
+        button.textContent = "Submit My Attendance";
+        showMessage("teacherAttendanceMessage", result.message || "Attendance submitted.", true);
+        if (result.warnings && result.warnings.length) showMessage("teacherAttendanceMessage", (result.message || "Attendance submitted.") + " " + result.warnings.join(" "), false);
+        $("teacherAttendanceForm").reset(); teacherToggleFields();
+        loadTeacherAttendanceSummary();
+      }).withFailureHandler(error => {
+        if (token !== sessionToken) return;
+        button.disabled = false; button.textContent = "Submit My Attendance";
+        showMessage("teacherAttendanceMessage", error.message || "Attendance submission failed.");
+      }).recordTeacherAttendance(token, data);
     });
 
     // Appearance preference: safe fallback when browser storage is unavailable.
