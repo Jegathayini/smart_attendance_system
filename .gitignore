@@ -1,24 +1,26 @@
-# Environment variables and secrets
-.env
-.env.*
-!.env.example
-
-# Node.js dependencies
-node_modules/
-
-# Google Apps Script authentication credentials
-.clasprc.json
-
-# Local clasp configuration (optional)
-.clasp.json
-
-# System files
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Logs
-*.log
-
-# Editor settings
+# VS Code / Editor configurations
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Node modules & dependencies (if any local tooling is used)
+node_modules/
+
+# Environment variables & sensitive local configs
+.env
+.env.local
+
+# Local database or real school record backups (Keep fictional sample workbook if needed, but exclude production sheets)
+*.xlsx
+*.csv
+!Fictional_data.xlsx
