@@ -1,198 +1,412 @@
-/** Professional A4 attendance reports. Admin-only; fictional-data prototype.
- * Pure Apps Script vector PDF: no Drive scope or external service.
- * Helvetica supports Latin text only; non-ASCII characters are replaced.
+/**
+ * Printable A4 HTML Reports (Full UTF-8 / Tamil Unicode Support) & CSV Export.
+ * Supports Full Year, Academic Term, and Monthly reports for Students & Teachers.
  */
-function rptValidate_(token, year, term) {
+
+function rptEscapeHtml_(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function rptFilename_(s) {
+  return String(s || 'report').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 60);
+}
+
+function rptValidate_(token, year, periodMode, term, month) {
   authRequire_(token, 'ADMIN');
   const y = Number(year);
   if (!Number.isInteger(y) || y < 2000 || y > 2100) throw new Error('Invalid year.');
-  const terms = attRecords_(getRequiredSheet('Academic_Terms')).filter(r => Number(r.Academic_Year) === y);
-  const t = String(term || 'ALL');
-  if (t !== 'ALL' && !terms.some(r => String(r.Term) === t)) throw new Error('Unknown term.');
-  const selected = terms.find(r => String(r.Term) === t);
-  return {year:y, term:t, start:selected ? attDate_(selected.Start_Date) : y+'-01-01',
-    end:selected ? attDate_(selected.End_Date) : y+'-12-31'};
-}
-function rptData_(scope) {
-  const records = attRecords_(getRequiredSheet('Attendance')).filter(r => {
-    const date = attDate_(r.Date);
-    return date && date >= scope.start && date <= scope.end &&
-      Number(r.Academic_Year || date.slice(0,4)) === scope.year &&
-      ['PRESENT','ABSENT','LATE'].includes(String(r.Status || '').toUpperCase());
-  });
-  const students = attRecords_(getRequiredSheet('Students'));
-  const names = new Map(students.map(r => [String(r.Student_ID), String(r.Name || r.Student_Name || '')]));
-  const summary = new Map();
-  records.forEach(r => {
-    const id = String(r.Student_ID || '').trim();
-    if (!id) return;
-    const date = attDate_(r.Date);
-    const cls = String(r.Class_ID || (String(r.Grade) + String(r.Section))).trim().toUpperCase();
-    const status = String(r.Status).trim().toUpperCase();
-    if (!summary.has(id)) summary.set(id, {id, name:names.get(id) || String(r.Student_Name || id),
-      grade:Number(r.Grade), cls, present:0, absent:0, late:0, days:new Set(), dates:[]});
-    const x = summary.get(id);
-    if (x.days.has(date)) throw new Error('Duplicate attendance for student '+id+' on '+date+'. Correct the sheet before exporting.');
-    x.days.add(date); x[status.toLowerCase()]++; x.dates.push({date,status});
-  });
-  return [...summary.values()].map(x => ({id:x.id,name:x.name,grade:x.grade,cls:x.cls,
-    present:x.present,absent:x.absent,late:x.late,total:x.days.size,
-    percent:x.days.size ? Math.round(10000*(x.present+x.late)/x.days.size)/100 : 0,
-    dates:x.dates.sort((a,b)=>a.date.localeCompare(b.date))}))
-    .sort((a,b)=>a.grade-b.grade || a.cls.localeCompare(b.cls,undefined,{numeric:true}) || a.name.localeCompare(b.name));
-}
-function rptEscape_(v) {
-  return String(v == null ? '' : v).replace(/[^\x20-\x7E]/g,'?')
-    .replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
-}
-function rptFilename_(s) {return String(s).replace(/[^A-Za-z0-9_-]/g,'_').slice(0,60);}
 
-/** columns: {title,width,align?}. Widths are proportional and scaled to fit A4. */
-function rptDocument_(title, scope, columns, rows, info, notes) {
-  const W=595.28,H=841.89,L=42,R=42,WIDTH=W-L-R;
-  const DARK=[0.09,0.17,0.30],BLUE=[0.10,0.31,0.66],MUTED=[0.39,0.46,0.55];
-  const pages=[];let ops=[],y=0,page=0;
-  const rgb=c=>c.map(n=>n.toFixed(3)).join(' ');
-  const ascii=v=>String(v==null?'':v).replace(/[^\x20-\x7E]/g,'?');
-  function text(t,x,yy,size,bold,color,align,maxWidth) {
-    t=ascii(t);const estimate=s=>s.length*size*(bold?0.56:0.51);
-    if(maxWidth)while(t.length>1 && estimate(t)>maxWidth)t=t.slice(0,-2)+'…';
-    t=t.replace(/…/g,'...');
-    const width=estimate(t);
-    if(align==='right')x-=width;else if(align==='center')x-=width/2;
-    ops.push('BT /'+(bold?'F2':'F1')+' '+size+' Tf '+rgb(color||DARK)+' rg 1 0 0 1 '+x.toFixed(2)+' '+yy.toFixed(2)+' Tm ('+rptEscape_(t)+') Tj ET');
+  const mode = String(periodMode || 'FULL_YEAR').toUpperCase();
+  if (mode === 'MONTHLY') {
+    const m = Number(month);
+    if (!Number.isInteger(m) || m < 1 || m > 12) throw new Error('Select a valid month (1–12).');
+    const mm = String(m).padStart(2, '0');
+    const lastDay = String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0');
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return {
+      year: y,
+      periodLabel: monthNames[m - 1] + ' ' + y,
+      term: monthNames[m - 1],
+      start: y + '-' + mm + '-01',
+      end: y + '-' + mm + '-' + lastDay
+    };
   }
-  function fill(x,yy,w,h,c){ops.push(rgb(c)+' rg '+[x,yy,w,h].map(n=>n.toFixed(2)).join(' ')+' re f');}
-  function line(yy,c){ops.push(rgb(c||[0.85,0.88,0.92])+' RG 0.6 w '+L+' '+yy.toFixed(2)+' m '+(W-R)+' '+yy.toFixed(2)+' l S');}
-  function top() {
-    ops=[];page++;
-    fill(0,H-72,W,72,BLUE);
-    text('SMART SCHOOL ATTENDANCE SYSTEM',L,H-33,12,true,[1,1,1]);
-    text('OFFICIAL ATTENDANCE SUMMARY',L,H-51,8,false,[0.88,0.94,1]);
-    text('ACADEMIC REPORT',W-R,H-34,9,true,[1,1,1],'right');
-    text(title.toUpperCase(),L,H-101,16,true,DARK,undefined,WIDTH);
-    text('ACADEMIC YEAR  '+scope.year+'     TERM  '+scope.term+'     PERIOD  '+scope.start+'  -  '+scope.end,
-      L,H-120,8,false,MUTED,undefined,WIDTH);
-    line(H-132);y=H-151;
-    if(info&&info.length){
-      const h=info.length*17+16;
-      fill(L,y-h,WIDTH,h,[0.94,0.97,1]);
-      fill(L,y-h,3,h,BLUE);
-      info.forEach((v,i)=>text(v,L+14,y-23-i*17,i===0?10:9,i===0,DARK,undefined,WIDTH-28));
-      y-=h+20;
+
+  if (mode === 'TERM') {
+    const t = String(term || '').trim();
+    const selected = getTermsCached_().find(r => r.year === y && r.term === t);
+    if (!selected) throw new Error('Select a valid academic term.');
+    return {
+      year: y,
+      periodLabel: selected.term + ' (' + y + ')',
+      term: selected.term,
+      start: selected.start,
+      end: selected.end
+    };
+  }
+
+  return {
+    year: y,
+    periodLabel: 'Full Year ' + y,
+    term: 'Full Year',
+    start: y + '-01-01',
+    end: y + '-12-31'
+  };
+}
+
+function rptData_(scope) {
+  const attSheet = getRequiredSheet('Attendance');
+  const vals = attSheet.getDataRange().getValues();
+  if (vals.length < 2) return [];
+
+  const h = vals[0].map(String);
+  const dIdx = h.indexOf('Date');
+  const yIdx = h.indexOf('Academic_Year');
+  const stIdx = h.indexOf('Status');
+  const idIdx = h.indexOf('Student_ID');
+  const nameIdx = h.indexOf('Student_Name');
+  const gIdx = h.indexOf('Grade');
+  const sIdx = h.indexOf('Section');
+  const cIdx = h.indexOf('Class_ID');
+
+  const names = new Map(getStudentsCached_().map(s => [s.id, s.name]));
+  const summary = new Map();
+
+  for (let i = 1; i < vals.length; i++) {
+    const r = vals[i];
+    const date = dIdx >= 0 ? attDate_(r[dIdx]) : '';
+    if (!date || date < scope.start || date > scope.end) continue;
+    const recYear = yIdx >= 0 && r[yIdx] ? Number(r[yIdx]) : Number(date.slice(0, 4));
+    if (recYear !== scope.year) continue;
+    const status = stIdx >= 0 ? String(r[stIdx] || '').trim().toUpperCase() : '';
+    if (!ATT_ALLOWED_.includes(status)) continue;
+    const id = idIdx >= 0 ? String(r[idIdx] || '').trim() : '';
+    if (!id) continue;
+
+    const grade = gIdx >= 0 ? Number(r[gIdx]) : 0;
+    const sec = sIdx >= 0 ? String(r[sIdx] || '').trim() : '';
+    const cls = cIdx >= 0 && r[cIdx]
+      ? String(r[cIdx]).trim().toUpperCase()
+      : (String(grade) + sec).toUpperCase();
+
+    if (!summary.has(id)) {
+      summary.set(id, {
+        id,
+        name: names.get(id) || (nameIdx >= 0 ? String(r[nameIdx] || id) : id),
+        grade,
+        cls,
+        present: 0,
+        absent: 0,
+        late: 0,
+        days: new Set(),
+        dates: []
+      });
     }
+    const x = summary.get(id);
+    if (x.days.has(date)) {
+      throw new Error('Duplicate attendance for student ' + id + ' on ' + date + '. Correct the sheet before exporting.');
+    }
+    x.days.add(date);
+    x[status.toLowerCase()]++;
+    x.dates.push({ date, status });
   }
-  function bottom(){
-    line(58);
-    text('Generated '+Utilities.formatDate(new Date(),ATT_TZ_,'dd MMM yyyy  HH:mm'),L,43,8,false,MUTED);
-    text('Page '+page,W-R,43,8,true,MUTED,'right');
-    text('Computer-generated report | For authorized school use',L,29,7,false,MUTED);
-    pages.push(ops.join('\n')+'\n');
-  }
-  const totalWidth=columns.reduce((s,c)=>s+Number(c.width||1),0);
-  const widths=columns.map(c=>WIDTH*Number(c.width||1)/totalWidth);
-  function tableHead(){
-    fill(L,y-29,WIDTH,29,[0.86,0.91,0.98]);
-    let x=L;
-    columns.forEach((c,i)=>{
-      const right=c.align==='right';
-      text(c.title,right?x+widths[i]-8:x+8,y-19,8,true,BLUE,right?'right':undefined,widths[i]-16);
-      x+=widths[i];
+
+  return [...summary.values()].map(x => ({
+    id: x.id,
+    name: x.name,
+    grade: x.grade,
+    cls: x.cls,
+    present: x.present,
+    absent: x.absent,
+    late: x.late,
+    total: x.days.size,
+    percent: x.days.size ? Math.round(10000 * (x.present + x.late) / x.days.size) / 100 : 0,
+    dates: x.dates.sort((a, b) => a.date.localeCompare(b.date))
+  })).sort((a, b) =>
+    a.grade - b.grade ||
+    a.cls.localeCompare(b.cls, undefined, { numeric: true }) ||
+    a.name.localeCompare(b.name)
+  );
+}
+
+function rptTeacherData_(scope) {
+  const names = new Map(authStaffCached_().map(s => [s.staffId, s.name]));
+  const summary = new Map();
+
+  taRowsCached_().forEach(r => {
+    if (!r.date || r.date < scope.start || r.date > scope.end) return;
+    if (!r.teacherId) return;
+    if (!summary.has(r.teacherId)) {
+      summary.set(r.teacherId, {
+        id: r.teacherId,
+        name: names.get(r.teacherId) || r.teacherName || r.teacherId,
+        present: 0,
+        absent: 0,
+        halfDay: 0,
+        shortLeave: 0,
+        total: 0,
+        dates: []
+      });
+    }
+    const x = summary.get(r.teacherId);
+    x.total++;
+    if (r.status === 'PRESENT') x.present++;
+    else if (r.status === 'ABSENT') x.absent++;
+    else if (r.status === 'HALF DAY') x.halfDay++;
+    else if (r.status === 'SHORT LEAVE') x.shortLeave++;
+    x.dates.push({
+      date: r.date,
+      status: r.status,
+      leaveType: r.leaveType,
+      reasonCategory: r.reasonCategory
     });
-    y-=30;
-  }
-  top();tableHead();
-  rows.forEach((row,i)=>{
-    if(y<105){bottom();top();tableHead();}
-    const h=25;
-    if(i%2===1)fill(L,y-h,WIDTH,h,[0.965,0.975,0.99]);
-    let x=L;
-    columns.forEach((c,j)=>{
-      const v=Array.isArray(row)?row[j]:row[c.key];
-      const right=c.align==='right';
-      text(v,right?x+widths[j]-8:x+8,y-17,8,false,DARK,right?'right':undefined,widths[j]-16);
-      x+=widths[j];
-    });
-    line(y-h);y-=h;
   });
-  if(!rows.length){text('No records available.',L+10,y-20,9,false,MUTED);y-=35;}
-  if(notes&&notes.length){
-    if(y<105+notes.length*15){bottom();top();}
-    y-=20;
-    text('REPORT NOTES',L,y,9,true,BLUE);y-=17;
-    notes.forEach(n=>{text(n,L,y,8,false,MUTED,undefined,WIDTH);y-=15;});
+
+  return [...summary.values()].map(x => ({
+    ...x,
+    dates: x.dates.sort((a, b) => a.date.localeCompare(b.date))
+  })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function rptSectionHtml_(title, scope, columns, rows, info, notes) {
+  const ths = columns.map(c =>
+    '<th class="' + (c.align === 'right' ? 'num' : '') + '">' + rptEscapeHtml_(c.title) + '</th>'
+  ).join('');
+  const trs = rows.length
+    ? rows.map(row => '<tr>' + columns.map((c, j) => {
+        const v = Array.isArray(row) ? row[j] : row[c.key];
+        return '<td class="' + (c.align === 'right' ? 'num' : '') + '">' + rptEscapeHtml_(v) + '</td>';
+      }).join('') + '</tr>').join('')
+    : '<tr><td colspan="' + columns.length + '" class="muted">No records available for this period.</td></tr>';
+  const infoHtml = (info && info.length)
+    ? '<div class="rpt-info">' + info.map((line, i) => '<div class="' + (i === 0 ? 'lead' : '') + '">' + rptEscapeHtml_(line) + '</div>').join('') + '</div>'
+    : '';
+  const notesHtml = (notes && notes.length)
+    ? '<div class="rpt-notes"><strong>REPORT NOTES</strong><ul>' + notes.map(n => '<li>' + rptEscapeHtml_(n) + '</li>').join('') + '</ul></div>'
+    : '';
+
+  return '<article class="rpt-sheet">' +
+    '<header class="rpt-head">' +
+      '<div><div class="rpt-school">Fictional School</div><div class="rpt-sub">SMART SCHOOL ATTENDANCE SYSTEM — OFFICIAL REPORT</div></div>' +
+      '<div class="rpt-meta"><div>YEAR: ' + rptEscapeHtml_(scope.year) + '</div><div>PERIOD: ' + rptEscapeHtml_(scope.periodLabel) + '</div></div>' +
+    '</header>' +
+    '<h2 class="rpt-title">' + rptEscapeHtml_(title) + '</h2>' +
+    '<div class="rpt-range">Date Range: ' + rptEscapeHtml_(scope.start) + ' to ' + rptEscapeHtml_(scope.end) + '</div>' +
+    infoHtml +
+    '<table class="rpt-table"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table>' +
+    notesHtml +
+    '<footer class="rpt-foot"><span>Generated ' + rptEscapeHtml_(Utilities.formatDate(new Date(), ATT_TZ_, 'dd MMM yyyy HH:mm')) + ' (Asia/Colombo)</span><span>Authorized School Report</span></footer>' +
+    '</article>';
+}
+
+function rptWrapHtmlDocument_(docTitle, bodyHtml) {
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + rptEscapeHtml_(docTitle) + '</title><style>' +
+    'body{margin:0;padding:16px;background:#eef2f7;color:#0f172a;font-family:"Noto Sans Tamil","Latha","Vijaya","Nirmala UI",Inter,system-ui,-apple-system,sans-serif;font-size:12px;line-height:1.45;}' +
+    '.rpt-sheet{max-width:794px;margin:0 auto 24px;background:#fff;padding:28px 34px;border-radius:8px;box-shadow:0 2px 12px rgba(15,23,42,.08);page-break-after:always;break-after:page;}' +
+    '.rpt-sheet:last-child{page-break-after:auto;break-after:auto;}' +
+    '.rpt-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:#155eef;color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:16px;}' +
+    '.rpt-school{font-size:14px;font-weight:800;letter-spacing:.3px;}.rpt-sub{font-size:10px;opacity:.9;margin-top:3px;}' +
+    '.rpt-meta{text-align:right;font-size:11px;font-weight:700;white-space:nowrap;}' +
+    '.rpt-title{margin:0 0 4px;font-size:17px;color:#0f172a;}.rpt-range{font-size:11px;color:#64748b;margin-bottom:14px;}' +
+    '.rpt-info{background:#f1f6ff;border-left:4px solid #155eef;padding:10px 14px;border-radius:6px;margin-bottom:14px;font-size:11.5px;}' +
+    '.rpt-info .lead{font-weight:700;margin-bottom:4px;font-size:12px;}' +
+    '.rpt-table{width:100%;border-collapse:collapse;margin-top:8px;}' +
+    '.rpt-table th{background:#e8f0fe;color:#174bb3;text-align:left;padding:8px;font-size:11px;border-bottom:2px solid #cbd5e1;}' +
+    '.rpt-table td{padding:7px 8px;border-bottom:1px solid #e2e8f0;font-size:11.5px;}' +
+    '.rpt-table tbody tr:nth-child(even){background:#f8fafc;}' +
+    '.rpt-table .num{text-align:right;font-variant-numeric:tabular-nums;}' +
+    '.rpt-notes{margin-top:14px;font-size:11px;color:#475569;}.rpt-notes ul{margin:4px 0 0;padding-left:18px;}' +
+    '.rpt-foot{display:flex;justify-content:space-between;margin-top:18px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:10px;color:#64748b;}' +
+    '@media print{body{background:#fff;padding:0;}.rpt-sheet{box-shadow:none;margin:0;padding:14mm 12mm;border-radius:0;max-width:none;}}' +
+    '</style></head><body>' + bodyHtml + '</body></html>';
+}
+
+function rptToCsv_(columns, rows) {
+  const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const head = columns.map(c => esc(c.title)).join(',');
+  const lines = rows.map(row => columns.map((c, j) => esc(Array.isArray(row) ? row[j] : row[c.key])).join(','));
+  return '\uFEFF' + [head].concat(lines).join('\r\n');
+}
+
+function getAttendanceReportOptions(token, year) {
+  authRequire_(token, 'ADMIN');
+  const y = Number(year);
+  if (!Number.isInteger(y) || y < 2000 || y > 2100) throw new Error('Invalid year.');
+
+  const terms = getTermsCached_()
+    .filter(t => t.year === y)
+    .map(t => ({ name: t.term, start: t.start, end: t.end }))
+    .sort((a, b) => a.start.localeCompare(b.start));
+
+  const students = getStudentsCached_()
+    .map(s => ({ id: s.id, name: s.name, grade: s.grade, cls: s.classId }))
+    .sort((a, b) => a.grade - b.grade || a.cls.localeCompare(b.cls, undefined, { numeric: true }) || a.name.localeCompare(b.name));
+
+  const classes = [...new Set(getClassesCached_().filter(c => c.active).map(c => c.className))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+  const teachers = authStaffCached_()
+    .filter(s => s.role === 'TEACHER')
+    .map(s => ({ id: s.staffId, name: s.name, username: s.username }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return { terms, students, classes, teachers };
+}
+
+function generateAttendanceReportHtml(token, options) {
+  if (!options || typeof options !== 'object') throw new Error('Missing report options.');
+  const scope = rptValidate_(token, options.year, options.periodMode, options.term, options.month);
+  const kind = String(options.type || '').toUpperCase();
+  const f = String(options.filter || '').trim();
+
+  if (kind === 'TEACHER_INDIVIDUAL' || kind === 'TEACHER_SUMMARY') {
+    const tData = rptTeacherData_(scope);
+    if (kind === 'TEACHER_INDIVIDUAL') {
+      const t = tData.find(x => x.id === f);
+      if (!t) throw new Error('No teacher attendance records found for this teacher in the selected period.');
+      const cols = [
+        { title: 'DATE' }, { title: 'STATUS' }, { title: 'LEAVE DETAILS' }, { title: 'REASON CATEGORY' }
+      ];
+      const rows = t.dates.map(d => [d.date, d.status, d.leaveType || '—', d.reasonCategory || '—']);
+      const info = [
+        'TEACHER: ' + t.name + '  |  ID: ' + t.id,
+        'Present: ' + t.present + '  |  Absent: ' + t.absent + '  |  Half Day: ' + t.halfDay + '  |  Short Leave: ' + t.shortLeave + '  |  Total Days: ' + t.total
+      ];
+      const htmlBody = rptSectionHtml_('Individual Teacher Attendance Report', scope, cols, rows, info, [
+        'Data sourced from TeacherAttendance records within the selected date range.'
+      ]);
+      const base = 'Teacher_' + rptFilename_(t.id) + '_' + rptFilename_(scope.periodLabel);
+      return {
+        title: 'Teacher Report — ' + t.name,
+        filename: base,
+        htmlFilename: base + '.html',
+        csvFilename: base + '.csv',
+        html: rptWrapHtmlDocument_('Teacher Attendance - ' + t.name, htmlBody),
+        csv: rptToCsv_(cols, rows)
+      };
+    }
+
+    if (!tData.length) throw new Error('No teacher attendance records found for the selected period.');
+    const cols = [
+      { title: 'TEACHER ID' }, { title: 'TEACHER NAME' },
+      { title: 'PRESENT', align: 'right' }, { title: 'ABSENT', align: 'right' },
+      { title: 'HALF DAY', align: 'right' }, { title: 'SHORT LEAVE', align: 'right' },
+      { title: 'RECORDS', align: 'right' }
+    ];
+    const rows = tData.map(x => [x.id, x.name, x.present, x.absent, x.halfDay, x.shortLeave, x.total]);
+    const info = ['TEACHERS WITH RECORDS: ' + tData.length + '  |  PERIOD: ' + scope.periodLabel];
+    const htmlBody = rptSectionHtml_('Staff Attendance Summary Report', scope, cols, rows, info, [
+      'Includes all submitted teacher self-attendance entries within the selected period.'
+    ]);
+    const base = 'Teachers_Summary_' + rptFilename_(scope.periodLabel);
+    return {
+      title: 'Teachers Attendance Summary',
+      filename: base,
+      htmlFilename: base + '.html',
+      csvFilename: base + '.csv',
+      html: rptWrapHtmlDocument_('Teachers Attendance Summary', htmlBody),
+      csv: rptToCsv_(cols, rows)
+    };
   }
-  bottom();
-  // Add consistent total page counts after all pages are known.
-  const objects=[null,'<< /Type /Catalog /Pages 2 0 R >>',null,
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'];
-  const kids=[];
-  pages.forEach(stream=>{
-    const id=objects.length,content=id+1;kids.push(id+' 0 R');
-    objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents '+content+' 0 R >>');
-    objects.push('<< /Length '+stream.length+' >>\nstream\n'+stream+'endstream');
-  });
-  objects[2]='<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+pages.length+' >>';
-  let pdf='%PDF-1.4\n';const offsets=[0];
-  for(let i=1;i<objects.length;i++){offsets.push(pdf.length);pdf+=i+' 0 obj\n'+objects[i]+'\nendobj\n';}
-  const xref=pdf.length;pdf+='xref\n0 '+objects.length+'\n0000000000 65535 f \n';
-  for(let i=1;i<objects.length;i++)pdf+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
-  pdf+='trailer\n<< /Size '+objects.length+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
-  return Utilities.newBlob(pdf,'application/pdf','attendance-report.pdf');
-}
-function rptStudent_(x,scope) {
-  const cols=[{title:'DATE',width:170},{title:'ATTENDANCE STATUS',width:340}];
-  const rows=x.dates.map(d=>[d.date,d.status]);
-  const info=['STUDENT  '+x.name+'     ID  '+x.id+'     CLASS  '+x.cls,
-    'Present  '+x.present+'     Absent  '+x.absent+'     Late  '+x.late+'     Completed days  '+x.total,
-    'ATTENDANCE RATE  '+x.percent+'%'];
-  return rptDocument_('Individual Student Attendance',scope,cols,rows,info,
-    ['Attendance rate = (Present + Late) / Completed days.',
-      'Pending days are excluded. Late is counted as attended.']);
-}
-function rptSummary_(kind,selected,scope) {
-  const cols=[{title:'STUDENT ID',width:88},{title:'STUDENT NAME',width:168},
-    {title:'CLASS',width:52},{title:'P',width:32,align:'right'},
-    {title:'A',width:32,align:'right'},{title:'L',width:32,align:'right'},
-    {title:'DAYS',width:46,align:'right'},{title:'RATE',width:61,align:'right'}];
-  const rows=selected.map(x=>[x.id,x.name,x.cls,x.present,x.absent,x.late,x.total,x.percent+'%']);
-  const attended=selected.reduce((n,x)=>n+x.present+x.late,0);
-  const days=selected.reduce((n,x)=>n+x.total,0);
-  const rate=days?Math.round(attended*10000/days)/100:0;
-  const info=['STUDENTS WITH RECORDS  '+selected.length+'     OVERALL ATTENDANCE RATE  '+rate+'%',
-    'P = Present     A = Absent     L = Late     Days = Completed attendance days'];
-  return rptDocument_(kind+' Attendance Summary',scope,cols,rows,info,
-    ['Attendance rate = (Present + Late) / Completed days.',
-     'Only submitted records are included; pending days are excluded.']);
-}
-function getAttendanceReportOptions(token,year) {
-  authRequire_(token,'ADMIN');const y=Number(year);
-  if(!Number.isInteger(y)||y<2000||y>2100)throw new Error('Invalid year.');
-  return {terms:attRecords_(getRequiredSheet('Academic_Terms')).filter(r=>Number(r.Academic_Year)===y)
-    .map(r=>String(r.Term)),students:attRecords_(getRequiredSheet('Students'))
-    .map(r=>({id:String(r.Student_ID),name:String(r.Name||r.Student_Name||''),grade:Number(r.Grade),cls:String(r.Class_ID||'')}))};
-}
-function generateAttendanceReport(token,year,term,type,filter) {
-  const scope=rptValidate_(token,year,term),data=rptData_(scope);
-  const f=String(filter||'').trim(),kind=String(type||'');let blob,filename;
-  if(kind==='STUDENT'){
-    const x=data.find(s=>s.id===f);
-    if(!x)throw new Error('No submitted attendance for this student in the selected period.');
-    blob=rptStudent_(x,scope);filename='Student_'+rptFilename_(x.id)+'.pdf';
-  }else if(['CLASS','GRADE','SCHOOL'].includes(kind)){
-    const selected=data.filter(x=>kind==='SCHOOL'||(kind==='GRADE'?x.grade===Number(f):x.cls===f.toUpperCase()));
-    if(!selected.length)throw new Error('No submitted attendance records for this selection.');
-    blob=rptSummary_(kind,selected,scope);filename=kind+'_'+rptFilename_(f||scope.year)+'.pdf';
-  }else if(['GRADE_ZIP','SCHOOL_ZIP'].includes(kind)){
-    const selected=data.filter(x=>kind==='SCHOOL_ZIP'||x.grade===Number(f));
-    if(!selected.length)throw new Error('No submitted attendance records for this selection.');
-    if(selected.length>500)throw new Error('Too many reports for one export; export grade-wise.');
-    const files=selected.map(x=>rptStudent_(x,scope).setName('Student_'+rptFilename_(x.id)+'.pdf'));
-    blob=Utilities.zip(files,'attendance-reports.zip');
-    filename=(kind==='GRADE_ZIP'?'Grade_'+rptFilename_(f):'School')+'_Reports.zip';
-  }else throw new Error('Invalid report type.');
-  const bytes=blob.getBytes();
-  if(bytes.length>8*1024*1024)throw new Error('Export too large; use a smaller selection.');
-  return {filename,mime:blob.getContentType(),base64:Utilities.base64Encode(bytes)};
+
+  const data = rptData_(scope);
+  if (kind === 'STUDENT') {
+    const x = data.find(s => s.id === f);
+    if (!x) throw new Error('No submitted attendance for this student in the selected period.');
+    const cols = [{ title: 'DATE' }, { title: 'ATTENDANCE STATUS' }];
+    const rows = x.dates.map(d => [d.date, d.status]);
+    const info = [
+      'STUDENT: ' + x.name + '  |  ID: ' + x.id + '  |  CLASS: ' + x.cls,
+      'Present: ' + x.present + '  |  Absent: ' + x.absent + '  |  Late: ' + x.late + '  |  Completed Days: ' + x.total + '  |  Attendance Rate: ' + x.percent + '%'
+    ];
+    const htmlBody = rptSectionHtml_('Individual Student Attendance Report', scope, cols, rows, info, [
+      'Attendance rate = (Present + Late) / Completed days.',
+      'Pending days are excluded. Late is counted as attended.'
+    ]);
+    const base = 'Student_' + rptFilename_(x.id) + '_' + rptFilename_(scope.periodLabel);
+    return {
+      title: 'Student Report — ' + x.name,
+      filename: base,
+      htmlFilename: base + '.html',
+      csvFilename: base + '.csv',
+      html: rptWrapHtmlDocument_('Student Report - ' + x.name, htmlBody),
+      csv: rptToCsv_(cols, rows)
+    };
+  }
+
+  if (['CLASS', 'GRADE', 'SCHOOL'].includes(kind)) {
+    const selected = data.filter(x =>
+      kind === 'SCHOOL' || (kind === 'GRADE' ? x.grade === Number(f) : x.cls === f.toUpperCase())
+    );
+    if (!selected.length) throw new Error('No submitted attendance records for this selection.');
+    const cols = [
+      { title: 'STUDENT ID' }, { title: 'STUDENT NAME' }, { title: 'CLASS' },
+      { title: 'P', align: 'right' }, { title: 'A', align: 'right' },
+      { title: 'L', align: 'right' }, { title: 'DAYS', align: 'right' },
+      { title: 'RATE %', align: 'right' }
+    ];
+    const rows = selected.map(x => [x.id, x.name, x.cls, x.present, x.absent, x.late, x.total, x.percent + '%']);
+    const attended = selected.reduce((n, x) => n + x.present + x.late, 0);
+    const days = selected.reduce((n, x) => n + x.total, 0);
+    const rate = days ? Math.round(attended * 10000 / days) / 100 : 0;
+    const info = [
+      'STUDENTS WITH RECORDS: ' + selected.length + '  |  OVERALL RATE: ' + rate + '%',
+      'P = Present  |  A = Absent  |  L = Late  |  Days = Completed attendance days'
+    ];
+    const htmlBody = rptSectionHtml_(kind + ' Attendance Summary', scope, cols, rows, info, [
+      'Attendance rate = (Present + Late) / Completed days.',
+      'Only submitted records are included.'
+    ]);
+    const base = kind + '_' + rptFilename_(f || scope.year) + '_' + rptFilename_(scope.periodLabel);
+    return {
+      title: kind + ' Attendance Summary',
+      filename: base,
+      htmlFilename: base + '.html',
+      csvFilename: base + '.csv',
+      html: rptWrapHtmlDocument_(kind + ' Summary', htmlBody),
+      csv: rptToCsv_(cols, rows)
+    };
+  }
+
+  if (['GRADE_BOOKLET', 'SCHOOL_BOOKLET'].includes(kind)) {
+    const selected = data.filter(x => kind === 'SCHOOL_BOOKLET' || x.grade === Number(f));
+    if (!selected.length) throw new Error('No submitted attendance records for this selection.');
+    if (selected.length > 500) throw new Error('Too many students for one printable booklet; select a single grade.');
+    const cols = [{ title: 'DATE' }, { title: 'ATTENDANCE STATUS' }];
+    const pages = selected.map(x => {
+      const rows = x.dates.map(d => [d.date, d.status]);
+      const info = [
+        'STUDENT: ' + x.name + '  |  ID: ' + x.id + '  |  CLASS: ' + x.cls,
+        'Present: ' + x.present + '  |  Absent: ' + x.absent + '  |  Late: ' + x.late + '  |  Days: ' + x.total + '  |  Rate: ' + x.percent + '%'
+      ];
+      return rptSectionHtml_('Student Attendance Report', scope, cols, rows, info, [
+        'Attendance rate = (Present + Late) / Completed days.'
+      ]);
+    }).join('');
+    const csvCols = [
+      { title: 'STUDENT ID' }, { title: 'STUDENT NAME' }, { title: 'CLASS' },
+      { title: 'DATE' }, { title: 'STATUS' }
+    ];
+    const csvRows = [];
+    selected.forEach(x => x.dates.forEach(d => csvRows.push([x.id, x.name, x.cls, d.date, d.status])));
+    const base = (kind === 'GRADE_BOOKLET' ? 'Grade_' + rptFilename_(f) : 'School') + '_Booklet_' + rptFilename_(scope.periodLabel);
+    return {
+      title: (kind === 'GRADE_BOOKLET' ? 'Grade ' + f : 'Whole School') + ' Printable Booklet',
+      filename: base,
+      htmlFilename: base + '.html',
+      csvFilename: base + '.csv',
+      html: rptWrapHtmlDocument_('Printable Student Reports', pages),
+      csv: rptToCsv_(csvCols, csvRows)
+    };
+  }
+
+  throw new Error('Invalid report type.');
 }
