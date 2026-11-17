@@ -1,6 +1,6 @@
 # 🎓 Smart School Attendance Management System
 
-**A smart, web-based school attendance management and monitoring system — powered by Google Apps Script and Google Sheets.** 🏫📊
+**A secure and configurable school attendance management system built with Google Apps Script and Google Sheets.**
 
 [![Platform](https://img.shields.io/badge/Platform-Google%20Apps%20Script-4285F4)](https://developers.google.com/apps-script)
 
@@ -14,15 +14,15 @@
 
 [![Version](https://img.shields.io/badge/Version-1.0-blue)](#project-status)
 
-> **Project status:** Under active development. The system includes student attendance management, teacher self-attendance, administrative corrections, configurable leave policies, attendance analysis, and reporting. Functional testing is being carried out using fictional school records before school deployment.
+[![Visibility](https://img.shields.io/badge/Repository-Public-brightgreen)](https://github.com/Jegathayini/smart_attendance_system)
+
+> **Project status:** Deployed. The system includes student attendance management, teacher self-attendance, administrative corrections, configurable leave policies, attendance analysis, and reporting.
 
 ---
 
-<a id="live-demo"></a>
-
 ## 🌐 Live Demo
 
-**Explore the Smart School Attendance System:** Live demo deployment is planned.
+**Explore the Smart School Attendance System:** [Open the live demo](https://jegathayini.github.io/smart_attendance_system/).
 
 The repository includes a separate `docs/` directory for the public demonstration interface.
 
@@ -47,8 +47,6 @@ The system brings student attendance and teacher self-attendance together in one
 > 💡 **New here?** Start with [Installation and configuration](#installation-and-configuration), then explore the [Google Sheets data model](#google-sheets-data-model) and [Authentication and security](#authentication-and-security).
 
 ---
-
-<a id="table-of-contents"></a>
 
 ## 🧭 Table of contents
 
@@ -77,8 +75,6 @@ The system brings student attendance and teacher self-attendance together in one
 
 ---
 
-<a id="overview"></a>
-
 ## 🌟 Overview
 
 **Smart School Attendance Management System** aims to reduce the administrative workload involved in recording and monitoring school attendance.
@@ -97,8 +93,6 @@ The system uses Google Sheets as its database and Google Apps Script for server-
 
 It is designed around a single-school deployment and can be configured according to the school's grade structure, class sections, academic calendar, and attendance policies.
 
-<a id="project-goals"></a>
-
 ### 🎯 Project goals
 
 - Simplify daily student attendance recording.
@@ -112,11 +106,7 @@ It is designed around a single-school deployment and can be configured according
 
 ---
 
-<a id="main-features"></a>
-
 ## ✨ Main features
-
-<a id="1-authentication-and-staff-management"></a>
 
 ### 🔐 1. Authentication and staff management
 
@@ -132,8 +122,6 @@ It is designed around a single-school deployment and can be configured according
 - Temporary login restriction for 15 minutes after reaching the attempt limit.
 - Password hashing using SHA-256 with individual salts and a private application pepper.
 
-<a id="2-student-management"></a>
-
 ### 🎓 2. Student and class management
 
 - Support for Grades 01–13.
@@ -148,8 +136,6 @@ It is designed around a single-school deployment and can be configured according
 - Student transfers between classes, subject to attendance-record restrictions.
 
 **Student eligibility:** Admission and leaving dates are considered when determining whether a student should be included in attendance for a particular date.
-
-<a id="3-daily-student-attendance"></a>
 
 ### 📝 3. Daily student attendance
 
@@ -171,8 +157,6 @@ It is designed around a single-school deployment and can be configured according
 
 **Important:** Late students are included in the Present attendance category for overall attendance calculations while Late is tracked separately for reporting.
 
-<a id="4-attendance-verification"></a>
-
 ### ✅ 4. Attendance verification and administrative corrections
 
 - Administrators can review submitted class attendance.
@@ -183,8 +167,6 @@ It is designed around a single-school deployment and can be configured according
 - Require an administrative reason for corrections.
 - Record administrative changes in the audit log.
 - Track class submission and verification status.
-
-<a id="5-teacher-self-attendance"></a>
 
 ### 👨‍🏫 5. Teacher self-attendance
 
@@ -212,8 +194,6 @@ Additional features:
 - Admin access to teacher attendance records.
 - Administrator corrections with reasons and audit records.
 
-<a id="6-configurable-leave-policies"></a>
-
 ### ⚙️ 6. Configurable teacher leave policies
 
 Administrators can configure leave policies according to the school's requirements.
@@ -233,8 +213,6 @@ Supported policy settings include:
 
 The application uses the configured policy to calculate leave usage and provide warnings to teachers.
 
-<a id="7-school-calendar-and-academic-terms"></a>
-
 ### 📅 7. School calendar and academic terms
 
 - Manage school calendar dates.
@@ -244,8 +222,6 @@ The application uses the configured policy to calculate leave usage and provide 
 - Maintain academic years.
 - Configure academic term start and end dates.
 - Use school calendar information for attendance planning and reporting.
-
-<a id="8-attendance-dashboard"></a>
 
 ### 📊 8. Attendance dashboard and analysis
 
@@ -260,8 +236,6 @@ The application uses the configured policy to calculate leave usage and provide 
 - Completed and pending class submissions.
 - Academic-year-based attendance analysis.
 - Manual dashboard refresh.
-
-<a id="9-attendance-reports"></a>
 
 ### 📄 9. Attendance reports
 
@@ -289,8 +263,6 @@ Export features:
 - Structured report formatting.
 
 ---
-
-<a id="user-roles"></a>
 
 ## 👥 User roles
 
@@ -320,8 +292,6 @@ Actual access is enforced through server-side authentication and role checks, no
 
 ---
 
-<a id="technology-stack"></a>
-
 ## 🛠️ Technology stack
 
 | Layer | Technology | Purpose |
@@ -340,8 +310,6 @@ Actual access is enforced through server-side authentication and role checks, no
 No separate paid hosting server or external database is required by the current architecture.
 
 ---
-
-<a id="how-the-system-works"></a>
 
 ## ⚙️ How the system works
 
@@ -393,8 +361,6 @@ No separate paid hosting server or external database is required by the current 
 
 ---
 
-<a id="repository-structure"></a>
-
 ## 📁 Repository structure
 
 ```text
@@ -429,8 +395,6 @@ The frontend file should be named `Index.html` in Apps Script because the applic
 
 ---
 
-<a id="requirements"></a>
-
 ## 📋 Requirements
 
 - A Google account.
@@ -444,22 +408,16 @@ Basic knowledge of Google Sheets and Apps Script is helpful.
 
 ---
 
-<a id="installation-and-configuration"></a>
-
 ## 🚀 Installation and configuration
-
-<a id="step-1-download-the-source"></a>
 
 ### 🔹 Step 1 — Download the source
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone https://github.com/Jegathayini/smart_attendance_system.git
 cd smart_attendance_system
 ```
 
 Alternatively, use **Code → Download ZIP** from GitHub.
-
-<a id="step-2-create-the-database"></a>
 
 ### 🔹 Step 2 — Create the Google Sheets database
 
@@ -471,16 +429,12 @@ Alternatively, use **Code → Download ZIP** from GitHub.
 
 Use fictional records during initial setup and testing.
 
-<a id="step-3-open-apps-script"></a>
-
 ### 🔹 Step 3 — Open Google Apps Script
 
 1. Open the newly created spreadsheet.
 2. Navigate to **Extensions → Apps Script**.
 3. This creates a spreadsheet-bound Apps Script project.
 4. Rename the project appropriately.
-
-<a id="step-4-add-server-files"></a>
 
 ### 🔹 Step 4 — Add the server-side files
 
@@ -502,16 +456,12 @@ Copy each file's source code into its corresponding Apps Script file.
 
 All server-side modules must belong to the same Apps Script project because they share functions and database helpers.
 
-<a id="step-5-add-the-frontend"></a>
-
 ### 🔹 Step 5 — Add the frontend
 
 1. Create a new HTML file named `Index`.
 2. Copy the contents of the repository's `Index.html`.
 3. Save the file.
 4. Ensure the filename matches the `doGet()` template reference exactly.
-
-<a id="step-6-configure-the-manifest"></a>
 
 ### 🔹 Step 6 — Configure the Apps Script manifest
 
@@ -524,8 +474,6 @@ The repository contains `appsscript.json`.
 5. Save and resolve any manifest errors.
 
 The application uses the `Asia/Colombo` timezone for attendance dates.
-
-<a id="step-7-initialize-database"></a>
 
 ### 🔹 Step 7 — Initialize the database
 
@@ -545,8 +493,6 @@ Settings
 Prepare the sheet headers according to the database schema documented below and the header definitions in the source code.
 
 The application also creates or initializes certain supporting sheets when their respective modules are first used.
-
-<a id="step-8-initialize-authentication"></a>
 
 ### 🔹 Step 8 — Initialize authentication
 
@@ -576,8 +522,6 @@ The setup function consumes and deletes the initial password property after succ
 
 **Security:** Never commit initial passwords, password hashes, authentication secrets, or session information to GitHub.
 
-<a id="step-9-configure-fictional-data"></a>
-
 ### 🔹 Step 9 — Configure fictional test records
 
 Before using real school records:
@@ -592,8 +536,6 @@ Before using real school records:
 
 Check that the sheet names and column headers match the source-code requirements.
 
-<a id="step-10-deploy"></a>
-
 ### 🔹 Step 10 — Deploy the web application
 
 1. Select **Deploy → New deployment**.
@@ -607,8 +549,6 @@ Check that the sheet names and column headers match the source-code requirements
 > **Important:** Deployment as the spreadsheet owner gives the application the owner's permissions. Every protected backend operation must validate the authenticated session and role. Do not expose real student records through a public deployment.
 
 ---
-
-<a id="google-sheets-data-model"></a>
 
 ## 📊 Google Sheets data model
 
@@ -744,8 +684,6 @@ These supporting sheets are initialized by their respective modules when require
 
 ---
 
-<a id="authentication-and-security"></a>
-
 ## 🛡️ Authentication and security
 
 ### 🔑 Custom authentication
@@ -787,8 +725,6 @@ The application uses custom authentication implemented within Google Apps Script
 Before using real school data, review deployment permissions, authentication, session revocation, data access, backups, and applicable privacy requirements.
 
 ---
-
-<a id="student-attendance-workflow"></a>
 
 ## 🧑‍🎓 Student attendance workflow
 
@@ -865,8 +801,6 @@ Verify Attendance    Correct Records
 
 ---
 
-<a id="teacher-attendance-and-leave-policies"></a>
-
 ## 👨‍🏫 Teacher attendance and leave policies
 
 ### 📝 Teacher self-attendance
@@ -903,8 +837,6 @@ This allows accidental submissions and subsequent changes to be handled through 
 
 ---
 
-<a id="dashboard-and-analysis"></a>
-
 ## 📈 Dashboard and analysis
 
 The dashboard provides an overview of student attendance across the school.
@@ -931,8 +863,6 @@ The dashboard provides an overview of student attendance across the school.
 The dashboard supports academic-year selection and manual refreshing.
 
 ---
-
-<a id="reports-and-exports"></a>
 
 ## 📄 Reports and exports
 
@@ -969,8 +899,6 @@ The report templates support UTF-8 content, including Tamil text.
 Official reporting access is restricted to administrators.
 
 ---
-
-<a id="testing"></a>
 
 ## 🧪 Testing
 
@@ -1009,8 +937,6 @@ Testing should include invalid inputs, restricted access attempts, and administr
 
 ---
 
-<a id="troubleshooting"></a>
-
 ## 🔧 Troubleshooting
 
 | Problem | Possible cause | What to check |
@@ -1033,8 +959,6 @@ Do not disable authorization checks to solve access-related errors.
 
 ---
 
-<a id="customization"></a>
-
 ## 🎨 Customization
 
 The application can be adapted according to school requirements.
@@ -1055,8 +979,6 @@ Possible customizations include:
 When changing the database schema, update the related backend validation and frontend functionality together.
 
 ---
-
-<a id="limitations-and-roadmap"></a>
 
 ## 🗺️ Limitations and roadmap
 
@@ -1083,8 +1005,6 @@ When changing the database schema, update the related backend validation and fro
 
 ---
 
-<a id="contributing"></a>
-
 ## 🤝 Contributing
 
 Suggestions, bug reports, and improvements are welcome.
@@ -1100,8 +1020,6 @@ If you would like to contribute:
 Please do not include real student information, passwords, authentication secrets, or private school documents in public contributions.
 
 ---
-
-<a id="feedback-and-bug-reports"></a>
 
 ## 💬 Feedback and bug reports
 
@@ -1121,13 +1039,13 @@ Thank you for exploring **Smart School Attendance Management System**! 🎓✨
 
 ---
 
-<a id="author"></a>
-
 ## 👩‍💻 Author
 
 **Jegathayini Thiruchelvam**
 
 - GitHub: [@Jegathayini](https://github.com/Jegathayini)
+- Repository: [Smart School Attendance System](https://github.com/Jegathayini/smart_attendance_system)
+- Live Demo: [Open application](https://jegathayini.github.io/smart_attendance_system/)
 
 ---
 
