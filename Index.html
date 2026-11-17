@@ -658,7 +658,7 @@
         <label for="smTransferReason">Transfer reason</label><input id="smTransferReason" maxlength="250" required>
         <button type="submit" class="secondary">Transfer Student</button>
       </form>
-      <h3>Mark Student as Left / Inactive</h3>
+      <h3>Mark Student as Left</h3>
       <p class="subtitle">Historical attendance is not deleted. Use this only for confirmed departures, not transfers between classes.</p>
       <form id="smLeaveForm">
         <div class="attendance-filters">
@@ -666,7 +666,7 @@
           <div><label for="smLeaveDate">Last Enrollment Date</label><input id="smLeaveDate" type="date" required></div>
         </div>
         <label for="smLeaveReason">Reason</label><input id="smLeaveReason" maxlength="250" required>
-        <button type="submit" class="secondary full">Mark Student Inactive</button>
+        <button type="submit" class="secondary full">Mark Student as Left</button>
       </form>
       <p id="smMessage" class="message" role="status"></p>
       <h3>Current Grade Register</h3><div id="smRegister"></div>
@@ -869,55 +869,111 @@
       <div id="teacherAttendanceLocked" class="teacher-locked-notice hidden">You have already submitted your attendance today. Contact an administrator if a correction is required.</div>
     </section>
 
-    <!-- DAILY ATTENDANCE -->
-    <div id="dailyAttendancePanel" class="panel">
-      <h2>Daily Attendance</h2>
+    
+<!-- DAILY ATTENDANCE -->
+<div id="dailyAttendancePanel" class="panel">
+  <h2>Daily Attendance</h2>
 
-      <p class="subtitle" style="margin-bottom:10px">
-        Choose a grade to open its student register.
-      </p>
+  <!-- Admin view selector -->
+  <div id="adminAttendanceViewControl" class="attendance-filters hidden">
+    <div>
+      <label for="adminAttendanceView">Attendance View</label>
+      <select id="adminAttendanceView">
+        <option value="students">Student Attendance</option>
+        <option value="teachers">Teacher Attendance</option>
+      </select>
+    </div>
+  </div>
 
-      <div class="attendance-filters">
-        <div>
-          <label for="attendanceGrade">Grade</label>
-          <select id="attendanceGrade">
-            <option value="">Select Grade</option>
-          </select>
-        </div>
+  <!-- STUDENT ATTENDANCE VIEW -->
+  <div id="adminStudentAttendanceView">
 
-        <div id="attendanceSectionField" class="hidden">
-          <label for="attendanceSection">Section</label>
-          <select id="attendanceSection" disabled>
-            <option value="">Select Section</option>
-          </select>
-        </div>
+    <p class="subtitle" style="margin-bottom:10px">
+      Choose a grade to open its student register.
+    </p>
+
+    <div class="attendance-filters">
+      <div>
+        <label for="attendanceGrade">Grade</label>
+        <select id="attendanceGrade">
+          <option value="">Select Grade</option>
+        </select>
       </div>
 
-      <div class="attendance-context">
-        <span id="attendanceClassPill" class="attendance-class-pill hidden"></span>
-        <span id="attendanceHint" class="attendance-help">Select a grade to get started.</span>
-      </div>
-      <p id="attendanceMessage"
-         class="message"
-         role="status"></p>
-
-      <div id="attendanceStudents"></div>
-
-      <div id="attendanceSummary"
-           class="attendance-summary hidden">
-      </div>
-
-      <div id="attendanceSubmitArea" class="hidden" style="margin-top:20px">
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
-          <input id="attendanceConfirm" type="checkbox" style="width:18px;height:18px;flex-shrink:0;margin:1px 0">
-          <span>I have checked all student attendance statuses and confirm they are correct.</span>
-        </label>
-        <button id="submitAttendanceButton" type="button" class="full" disabled>Submit Today's Attendance</button>
-      </div>
-      <div class="notice" id="attendanceNotice">
-        Select a class and check the attendance before submitting. Once submitted, teachers cannot edit it.
+      <div id="attendanceSectionField" class="hidden">
+        <label for="attendanceSection">Section</label>
+        <select id="attendanceSection" disabled>
+          <option value="">Select Section</option>
+        </select>
       </div>
     </div>
+
+    <div class="attendance-context">
+      <span id="attendanceClassPill" class="attendance-class-pill hidden"></span>
+      <span id="attendanceHint" class="attendance-help">Select a grade to get started.</span>
+    </div>
+
+    <p id="attendanceMessage" class="message" role="status"></p>
+
+    <div id="attendanceStudents"></div>
+
+    <div id="attendanceSummary" class="attendance-summary hidden">
+    </div>
+
+    <div id="attendanceSubmitArea" class="hidden" style="margin-top:20px">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+        <input id="attendanceConfirm" type="checkbox" style="width:18px;height:18px;flex-shrink:0;margin:1px 0">
+        <span>I have checked all student attendance statuses and confirm they are correct.</span>
+      </label>
+      <button id="submitAttendanceButton" type="button" class="full" disabled>
+        Submit Today's Attendance
+      </button>
+    </div>
+
+    <div class="notice" id="attendanceNotice">
+      Select a class and check the attendance before submitting. Once submitted, teachers cannot edit it.
+    </div>
+
+  </div>
+
+  <!-- TEACHER ATTENDANCE VIEW -->
+  <div id="adminTeacherAttendanceView" class="hidden">
+
+    <p class="subtitle" style="margin-bottom:10px">
+      View today's attendance records submitted by teachers.
+    </p>
+
+<div class="attendance-filters">
+
+  <div>
+    <label for="adminTeacherAttendanceDate">Attendance Date</label>
+    <input type="date" id="adminTeacherAttendanceDate">
+  </div>
+
+  <div>
+    <label for="adminTeacherAttendanceScope">Records</label>
+    <select id="adminTeacherAttendanceScope">
+      <option value="DATE">Selected Date</option>
+      <option value="ALL">All Dates</option>
+    </select>
+  </div>
+
+  <div>
+    <button id="adminTeacherAttendanceLoad" type="button">
+      Load Records
+    </button>
+  </div>
+
+</div>
+
+
+    <p id="adminTeacherAttendanceMessage" class="message" role="status"></p>
+
+    <div id="adminTeacherAttendanceRecords"></div>
+
+  </div>
+
+</div>
 
     <!-- ADMIN LEAVE POLICY SETTINGS -->
     <section id="leavePolicyPanel" class="panel hidden">
@@ -1155,6 +1211,11 @@
             "Welcome, " + user.name;
 
           $("roleBadge").textContent = user.role;
+          // Initialise admin teacher attendance date filter
+if (user.role === "ADMIN") {
+  $("adminTeacherAttendanceDate").value =
+    new Date().toLocaleDateString("en-CA");
+}
           refreshQuickNavigation();
 
           const isAdmin = user.role === "ADMIN";
@@ -1203,6 +1264,10 @@
 
     function logout() {
       const token = sessionToken;
+      const scope = $("adminTeacherAttendanceScope").value;
+const selectedDate = scope === "ALL"
+  ? "ALL"
+  : $("adminTeacherAttendanceDate").value;
 
       clearSession();
       showScreen("loginScreen");
@@ -1473,6 +1538,40 @@
         })
         .getAttendanceClasses(token, Number(grade));
     });
+    
+
+// NEW admin attendance view listener
+$("adminAttendanceView").addEventListener("change", function() {
+  const isAdmin = $("roleBadge").textContent.trim() === "ADMIN";
+
+  if (!isAdmin) return;
+
+  const selectedView = this.value;
+
+  $("adminStudentAttendanceView").classList.toggle(
+    "hidden",
+    selectedView !== "students"
+  );
+
+  $("adminTeacherAttendanceView").classList.toggle(
+    "hidden",
+    selectedView !== "teachers"
+  );
+
+  if (selectedView === "teachers") {
+    loadAdminTeacherAttendance();
+  }
+});
+// Admin teacher attendance history controls
+$("adminTeacherAttendanceLoad").addEventListener("click", () => {
+  loadAdminTeacherAttendance();
+});
+
+$("adminTeacherAttendanceScope").addEventListener("change", () => {
+  const isAll = $("adminTeacherAttendanceScope").value === "ALL";
+
+  $("adminTeacherAttendanceDate").disabled = isAll;
+});
 
     $("attendanceSection").addEventListener("change", () => {
       const grade = $("attendanceGrade").value;
@@ -2023,28 +2122,74 @@
     $('smAdmitted').value=new Date().toLocaleDateString('en-CA');
     $('smLeaveDate').value=new Date().toLocaleDateString('en-CA');
     function smStatus(message,ok=false){showMessage('smMessage',message,ok);}
-    function smLoad(){
-      if(!sessionToken)return;
-      const token=sessionToken,grade=Number($('smGrade').value);
-      smStatus('Loading register...',true);
-      google.script.run.withSuccessHandler(data=>{
-        if(token!==sessionToken||grade!==Number($('smGrade').value))return;
-        const section=$('smSection');section.replaceChildren();
-        (data.classes||[]).filter(c=>c.active).forEach(c=>section.add(new Option(c.name,c.section)));
-        const box=$('smRegister');box.replaceChildren();
-        const table=document.createElement('table');table.className='attendance-table';
-        const head=document.createElement('tr');
-        ['Student ID','Name','Class','Roll','Active'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.appendChild(th);});
-        table.appendChild(head);
-        (data.students||[]).forEach(st=>{
-          const tr=document.createElement('tr');
-          [st.id,st.name,st.grade+st.section,st.roll,st.active?'Yes':'No'].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});
-          table.appendChild(tr);
-        });
-        const wrap=document.createElement('div');wrap.className='attendance-table-wrapper';wrap.appendChild(table);box.appendChild(wrap);
-        smStatus((data.students||[]).length+' students loaded.',true);
-      }).withFailureHandler(e=>smStatus(e.message||'Unable to load register')).smList(token,grade);
-    }
+    
+function smLoad(){
+  if(!sessionToken)return;
+
+  const token=sessionToken;
+  const grade=Number($('smGrade').value);
+
+  smStatus('Loading register...',true);
+
+  google.script.run
+    .withSuccessHandler(data=>{
+      if(token!==sessionToken || grade!==Number($('smGrade').value))return;
+
+      const section=$('smSection');
+      section.replaceChildren();
+
+      (data.classes||[])
+        .filter(c=>c.active)
+        .forEach(c=>section.add(new Option(c.name,c.section)));
+
+      const box=$('smRegister');
+      box.replaceChildren();
+
+      const table=document.createElement('table');
+      table.className='attendance-table';
+
+      const head=document.createElement('tr');
+
+      ['Student ID','Name','Class','Roll','Status'].forEach(t=>{
+        const th=document.createElement('th');
+        th.textContent=t;
+        head.appendChild(th);
+      });
+
+      table.appendChild(head);
+
+      (data.students||[]).forEach(st=>{
+        const tr=document.createElement('tr');
+
+        const status =
+          String(st.status || (st.active ? 'ACTIVE' : 'LEFT')).toUpperCase() === 'LEFT'
+            ? 'Left'
+            : 'Active';
+
+        [st.id,st.name,st.grade+st.section,st.roll,status]
+          .forEach(v=>{
+            const td=document.createElement('td');
+            td.textContent=v;
+            tr.appendChild(td);
+          });
+
+        table.appendChild(tr);
+      });
+
+      const wrap=document.createElement('div');
+      wrap.className='attendance-table-wrapper';
+      wrap.appendChild(table);
+      box.appendChild(wrap);
+
+      smStatus((data.students||[]).length+' students loaded.',true);
+
+    })
+    .withFailureHandler(e=>{
+      smStatus(e.message||'Unable to load register');
+    })
+    .smList(token,grade);
+}
+
     $('smGrade').addEventListener('change',smLoad);
     $('smRefresh').addEventListener('click',smLoad);
     $('smClassForm').addEventListener('submit',e=>{
@@ -2061,14 +2206,45 @@
       google.script.run.withSuccessHandler(r=>{smStatus('Student created: '+r.id,true);$('smStudentForm').reset();smLoad();})
         .withFailureHandler(err=>smStatus(err.message||'Failed to add student')).smAddStudent(sessionToken,s);
     });
-    $('smLeaveForm').addEventListener('submit',e=>{
-      e.preventDefault();if(!sessionToken)return;
-      if(!confirm('Mark this student inactive? Historical attendance will remain.'))return;
-      smStatus('Updating enrollment...',true);
-      google.script.run.withSuccessHandler(()=>{smStatus('Student marked inactive.',true);$('smLeaveForm').reset();smLoad();})
-        .withFailureHandler(err=>smStatus(err.message||'Failed to update student'))
-        .smDeactivateStudent(sessionToken,$('smLeaveId').value.trim(),$('smLeaveDate').value,$('smLeaveReason').value.trim());
-    });
+    
+$('smLeaveForm').addEventListener('submit',e=>{
+  e.preventDefault();
+
+  if(!sessionToken)return;
+
+  const id=$('smLeaveId').value.trim();
+  const leavingDate=$('smLeaveDate').value;
+  const reason=$('smLeaveReason').value.trim();
+
+  if(!confirm(
+    'Mark this student as Left from '+leavingDate+
+    '? Historical attendance will be preserved.'
+  ))return;
+
+  smStatus('Updating student status...',true);
+
+  google.script.run
+    .withSuccessHandler(()=>{
+      // Clear cached student lists so Left students
+      // do not remain in previously loaded attendance lists.
+      studentCache.clear();
+
+      smStatus(
+        'Student marked as Left. Historical attendance has been preserved.',
+        true
+      );
+
+      $('smLeaveForm').reset();
+      $('smLeaveDate').value=new Date().toLocaleDateString('en-CA');
+
+      smLoad();
+    })
+    .withFailureHandler(err=>{
+      smStatus(err.message||'Unable to update student status');
+    })
+    .smMarkStudentLeft(sessionToken,id,leavingDate,reason);
+});
+
 
 
     // Student editing and limited transfer
@@ -2105,15 +2281,31 @@
     ];
     const teacherWorkspaceIds = ["teacherOverviewPanel", "teacherAttendancePanel"];
 
-    function refreshQuickNavigation() {
-      const isAdmin = $("roleBadge").textContent.trim() === "ADMIN";
-      document.querySelectorAll("#appQuickNav button[data-target]").forEach(button => {
-        const target = button.dataset.target;
-        const adminOnly = adminWorkspaceIds.includes(target);
-        const teacherOnly = teacherWorkspaceIds.includes(target);
-        button.classList.toggle("hidden", (adminOnly && !isAdmin) || (teacherOnly && isAdmin));
-      });
-    }
+    
+function refreshQuickNavigation() {
+  const isAdmin = $("roleBadge").textContent.trim() === "ADMIN";
+
+  document.querySelectorAll("#appQuickNav button[data-target]").forEach(button => {
+    const target = button.dataset.target;
+    const adminOnly = adminWorkspaceIds.includes(target);
+    const teacherOnly = teacherWorkspaceIds.includes(target);
+
+    button.classList.toggle(
+      "hidden",
+      (adminOnly && !isAdmin) || (teacherOnly && isAdmin)
+    );
+  });
+
+  // Admin-only attendance view selector
+  $("adminAttendanceViewControl").classList.toggle("hidden", !isAdmin);
+
+  // Teachers always use the student attendance view
+  if (!isAdmin) {
+    $("adminStudentAttendanceView").classList.remove("hidden");
+    $("adminTeacherAttendanceView").classList.add("hidden");
+  }
+}
+
 
     function activateWorkspaceTab(targetId) {
       const isAdmin = $("roleBadge").textContent.trim() === "ADMIN";
@@ -2283,6 +2475,106 @@
       $("teacherAttendanceLocked").classList.toggle("hidden", !locked);
       if (locked) showMessage("teacherAttendanceMessage", "Your attendance has already been submitted today.", true);
     }
+
+function loadAdminTeacherAttendance() {
+  if (!sessionToken) return;
+
+  const token = sessionToken;
+  const box = $("adminTeacherAttendanceRecords");
+  const message = $("adminTeacherAttendanceMessage");
+
+  message.textContent = "Loading today's teacher attendance...";
+  box.replaceChildren();
+
+  google.script.run
+    .withSuccessHandler(data => {
+      if (token !== sessionToken) return;
+
+      box.replaceChildren();
+
+      const records = data.records || [];
+
+      message.textContent =
+  (data.date === "ALL" ? "All historical attendance records" : "Attendance records for " + data.date) +
+  " — " + records.length + " teacher record(s) found.";
+
+      if (!records.length) {
+        box.textContent = "No teacher attendance submissions found for today.";
+        return;
+      }
+
+      const table = document.createElement("table");
+      table.className = "attendance-table";
+
+      const headings = [
+        "Date",
+        "Teacher",
+        "Status",
+        "Leave Details",
+        "Reason",
+        "Submitted At"
+      ];
+
+      const head = document.createElement("tr");
+
+      headings.forEach(title => {
+        const th = document.createElement("th");
+        th.textContent = title;
+        head.appendChild(th);
+      });
+
+      table.appendChild(head);
+
+      records.forEach(record => {
+        const tr = document.createElement("tr");
+
+        let leaveDetails = record.leaveType || "—";
+
+        if (leaveDetails === "FIRST HALF") {
+          leaveDetails = "1st Half";
+        } else if (leaveDetails === "SECOND HALF") {
+          leaveDetails = "2nd Half";
+        } else if (leaveDetails === "FULL_DAY") {
+          leaveDetails = "Full Day";
+        } else if (leaveDetails.startsWith("PERIODS:")) {
+          leaveDetails = "Periods " + leaveDetails.substring(8).replace(/,/g, ", ");
+        }
+
+        const values = [
+          record.date || "—",
+          record.teacherName,
+          record.status,
+          leaveDetails,
+          record.reasonCategory || "—",
+          record.submittedAt || "—"
+        ];
+
+        values.forEach(value => {
+          const td = document.createElement("td");
+          td.textContent = value || "—";
+          tr.appendChild(td);
+        });
+
+        table.appendChild(tr);
+      });
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "attendance-table-wrapper";
+      wrapper.appendChild(table);
+
+      box.appendChild(wrapper);
+    })
+    .withFailureHandler(error => {
+      if (token !== sessionToken) return;
+
+      message.textContent =
+        error.message || "Unable to load teacher attendance.";
+
+      box.replaceChildren();
+    })
+    .adminGetTeacherDailyAttendance(token, selectedDate);
+}
+
 
     function loadTeacherAttendanceSummary() {
       if (!sessionToken) return;

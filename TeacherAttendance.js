@@ -338,3 +338,56 @@ function adminSaveTeacherLeavePolicy(token, data) {
     lock.releaseLock();
   }
 }
+
+
+
+/**
+ * Admin-only: retrieve teacher attendance for a selected date
+ * or all dates.
+ */
+function adminGetTeacherDailyAttendance(token, filterDate) {
+  authRequire_(token, 'ADMIN');
+
+  const today = taToday_();
+  const selectedDate = String(filterDate || today).trim();
+
+  if (selectedDate !== 'ALL' && !taIsoValid_(selectedDate)) {
+    throw new Error('Invalid attendance date.');
+  }
+
+  const sheet = taEnsureSheet_(TA_SHEET_, TA_HEADERS_);
+
+  const records = taRows_(sheet)
+    .filter(r => {
+      const date = taDateString_(r.Timestamp);
+
+      if (selectedDate === 'ALL') return true;
+      return date === selectedDate;
+    })
+    .map(r => ({
+      teacherId: String(r['Teacher ID'] || ''),
+      teacherName: String(r['Teacher Name'] || ''),
+      status: String(r.Status || ''),
+      leaveType: String(r['Leave Type'] || ''),
+      reasonCategory: String(r['Reason Category'] || ''),
+      date: taDateString_(r.Timestamp),
+      timestampMs: r.Timestamp instanceof Date
+        ? r.Timestamp.getTime()
+        : new Date(r.Timestamp).getTime(),
+      submittedAt: r.Timestamp instanceof Date
+        ? Utilities.formatDate(r.Timestamp, 'Asia/Colombo', 'hh:mm a')
+        : ''
+    }))
+    .sort((a, b) =>
+      b.timestampMs - a.timestampMs ||
+      a.teacherName.localeCompare(b.teacherName)
+    );
+
+  return {
+    date: selectedDate,
+    totalSubmitted: records.length,
+    records: records
+  };
+}
+
+

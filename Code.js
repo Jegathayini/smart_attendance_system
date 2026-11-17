@@ -348,6 +348,7 @@ function getAttendanceClasses(token, grade) {
     }));
 }
 
+
 function getAttendanceStudents(token, grade, section) {
   authRequire_(token, "SESSION");
 
@@ -376,15 +377,82 @@ function getAttendanceStudents(token, grade, section) {
     throw new Error("Selected class is not active.");
   }
 
+  // Current date in the school's timezone
+  const timezone = "Asia/Colombo";
+  const today = Utilities.formatDate(
+    new Date(),
+    timezone,
+    "yyyy-MM-dd"
+  );
+
+  // Convert a sheet date into yyyy-MM-dd
+  function formatSheetDate(value) {
+    if (!value) return "";
+
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      return Utilities.formatDate(
+        value,
+        timezone,
+        "yyyy-MM-dd"
+      );
+    }
+
+    const parsed = new Date(value);
+
+    if (isNaN(parsed.getTime())) return "";
+
+    return Utilities.formatDate(
+      parsed,
+      timezone,
+      "yyyy-MM-dd"
+    );
+  }
+
+  function isActiveStudent(row) {
+    const activeValue = String(row.Active)
+      .trim()
+      .toLowerCase();
+
+    const isActive =
+      activeValue === "true" ||
+      activeValue === "yes" ||
+      activeValue === "1" ||
+      activeValue === "active";
+
+    const admissionDate = formatSheetDate(
+      row.Admission_Date
+    );
+
+    const leavingDate = formatSheetDate(
+      row.Leaving_Date
+    );
+
+    // Exclude students before their admission date.
+    if (admissionDate && today < admissionDate) {
+      return false;
+    }
+
+    // Leaving_Date is the student's FINAL attendance date.
+    // They remain eligible on that date.
+    // From the following day, they are excluded.
+    if (leavingDate) {
+      return today <= leavingDate;
+    }
+
+    // Students without a leaving date must be Active.
+    return isActive;
+  }
+
   return attendanceReadRows_("Students")
     .filter(row =>
       Number(row.Grade) === selectedGrade &&
-      normalizeClassId(row.Class_ID) === className
+      normalizeClassId(row.Class_ID) === className &&
+      isActiveStudent(row)
     )
     .map(row => ({
       studentId: String(row.Student_ID),
       name: String(
-        row.Name || row.Student_Name || ""
+        row.Student_Name || row.Name || ""
       ),
       rollNo: row.Roll_No || "",
       gender: String(row.Gender || "")
@@ -393,3 +461,4 @@ function getAttendanceStudents(token, grade, section) {
       Number(a.rollNo) - Number(b.rollNo)
     );
 }
+
