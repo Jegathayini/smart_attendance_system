@@ -377,10 +377,12 @@ smart_attendance_system/
 │   └── demo-storage.js
 │
 └── .gitignore
+```
 
 **Important filename mapping:** The repository uses `.js` files for server-side Apps Script source code. When importing the project into Google Apps Script, create corresponding `.gs` script files and copy the source into them.
 
 The frontend file should be named `Index.html` in Apps Script because the application uses the `Index` template.
+
 
 ---
 
