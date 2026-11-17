@@ -539,6 +539,7 @@ Check that the sheet names and column headers match the source-code requirements
 ---
 
 ## 📊 Google Sheets data model
+> 📥 **Sample Database:** A ready-to-use sample workbook pre-populated with fictional students, classes, attendance logs, and leave policies is included in this repository as [`Fictional_data.xlsx`](Fictional_data.xlsx)[cite: 5]. Never use real student details or passwords when testing.
 
 The application uses Google Sheets as its centralized database. Below is the exact schema corresponding to the application worksheets and columns:
 
