@@ -10,7 +10,7 @@
 [![Version](https://img.shields.io/badge/Version-1.0-blue)](#project-status)
 [![Visibility](https://img.shields.io/badge/Repository-Public-brightgreen)](https://github.com/Jegathayini/smart_attendance_system)
 
-> **Project status:** Deployed. The system includes student attendance management, teacher self-attendance, administrative corrections, configurable leave policies, attendance analysis, and reporting.
+> **Project status:** Deployed. The system includes student attendance management, teacher self-attendance, administrative corrections, configurable leave policies, attendance analysis, and reporting. If you'd like to evaluate or test the system locally, you can use the included [`Fictional_data.xlsx`](Fictional_data.xlsx) sample database workbook containing 100% fictional school records. 💙
 
 ---
 
@@ -359,27 +359,24 @@ No separate paid hosting server or external database is required by the current 
 smart_attendance_system/
 │
 ├── Auth.js                 # Authentication and staff management
-├── Code.js                 # Core application and database functions
-├── Attendance.js           # Daily student attendance
-├── AttendanceAdmin.js      # Admin verification and corrections
-├── TeacherAttendance.js    # Teacher self-attendance and leave policies
-├── StudentManagement.js    # Student and class management
 ├── CalendarTerm.js         # School calendar and academic terms
+├── Code.js                 # Core application and database functions
 ├── Dashboard.js            # Attendance dashboard and analysis
+├── Fictional_data.xlsx     # 📥 Sample fictional database workbook
+├── Index.html              # Main application interface
+├── README.md               # Project documentation
 ├── Reports.js              # PDF reports and CSV exports
-│
-├── Index.html               # Main application interface
+├── StudentManagement.js    # Student and class management
+├── TeacherAttendance.js    # Teacher self-attendance and leave policies
 ├── appsscript.json          # Apps Script manifest
 │
-├── docs/                    # Public demonstration interface
+├── docs/                   # Public demonstration interface (GitHub Pages)
 │   ├── index.html
 │   ├── demo-api.js
 │   ├── demo-data.js
 │   └── demo-storage.js
 │
-├── .gitignore
-└── README.md
-```
+└── .gitignore
 
 **Important filename mapping:** The repository uses `.js` files for server-side Apps Script source code. When importing the project into Google Apps Script, create corresponding `.gs` script files and copy the source into them.
 
@@ -413,11 +410,10 @@ Alternatively, use **Code → Download ZIP** from GitHub.
 
 ### 🔹 Step 2 — Create the Google Sheets database
 
-1. Open Google Sheets.
-2. Create a new spreadsheet.
-3. Name it `Smart School Attendance Database`.
-4. Create the required sheets listed in the [Google Sheets data model](#google-sheets-data-model).
-5. Keep the spreadsheet private.
+1. Download the sample workbook [`Fictional_data.xlsx`](Fictional_data.xlsx) from the repository root[cite: 5].
+2. Upload it to your **Google Drive** and open it with **Google Sheets** (*File → Save as Google Sheets*).
+3. Rename the spreadsheet to `Smart School Attendance Database` and keep it **private**.
+4. Verify that all 12 required worksheets (`Students`, `Classes`, `Attendance`, `Attendance_Verifications`, `Staff_Access`, `Teachers`, `TeacherAttendance`, `Teacher_Leave_Policies`, `School_Calendar`, `Academic_Terms`, `Audit_Log`, `Settings`) are present.
 
 Use fictional records during initial setup and testing.
 
