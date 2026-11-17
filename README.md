@@ -1,19 +1,13 @@
-# 🎓 Smart School Attendance Management System
+# 📋 Smart School Attendance Management System
 
 **A secure and configurable school attendance management system built with Google Apps Script and Google Sheets.**
 
 [![Platform](https://img.shields.io/badge/Platform-Google%20Apps%20Script-4285F4)](https://developers.google.com/apps-script)
-
 [![Database](https://img.shields.io/badge/Database-Google%20Sheets-34A853)](https://www.google.com/sheets/about/)
-
 [![Frontend](https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JavaScript-orange)](#technology-stack)
-
 [![Authentication](https://img.shields.io/badge/Authentication-Role%20Based-blue)](#authentication-and-security)
-
 [![Reports](https://img.shields.io/badge/Reports-PDF%20%7C%20CSV-purple)](#reports-and-exports)
-
 [![Version](https://img.shields.io/badge/Version-1.0-blue)](#project-status)
-
 [![Visibility](https://img.shields.io/badge/Repository-Public-brightgreen)](https://github.com/Jegathayini/smart_attendance_system)
 
 > **Project status:** Deployed. The system includes student attendance management, teacher self-attendance, administrative corrections, configurable leave policies, attendance analysis, and reporting.
@@ -32,16 +26,14 @@ The public demonstration is intended to use fictional student and teacher record
 
 ---
 
-## 💙 Welcome to Smart School Attendance System!
+## 💙 Welcome to Smart School Attendance Management System!
 
 I developed **Smart School Attendance Management System** to simplify daily attendance recording, teacher attendance monitoring, administrative verification, and school-wide attendance analysis.
 
 The system brings student attendance and teacher self-attendance together in one centralized browser-based application.
 
-**👩‍🏫 Teachers:** Record daily student attendance and submit personal attendance.
-
-**👨‍💼 Administrators:** Manage students, classes, staff accounts, attendance records, leave policies, and reports.
-
+**👩‍🏫 Teachers:** Record daily student attendance and submit personal attendance.  
+**👨‍💼 Administrators:** Manage students, classes, staff accounts, attendance records, leave policies, and reports.  
 **👩‍💻 Developers:** Explore the source code, configure a fictional test database, and contribute improvements.
 
 > 💡 **New here?** Start with [Installation and configuration](#installation-and-configuration), then explore the [Google Sheets data model](#google-sheets-data-model) and [Authentication and security](#authentication-and-security).
@@ -424,7 +416,7 @@ Alternatively, use **Code → Download ZIP** from GitHub.
 1. Open Google Sheets.
 2. Create a new spreadsheet.
 3. Name it `Smart School Attendance Database`.
-4. Create the eight required sheets listed in the [Google Sheets data model](#google-sheets-data-model).
+4. Create the required sheets listed in the [Google Sheets data model](#google-sheets-data-model).
 5. Keep the spreadsheet private.
 
 Use fictional records during initial setup and testing.
@@ -477,22 +469,22 @@ The application uses the `Asia/Colombo` timezone for attendance dates.
 
 ### 🔹 Step 7 — Initialize the database
 
-The application expects the following core sheets:
+The database relies on the exact sheet names and column headers verified from the application schema:
 
 ```text
 Students
+Teacher_Leave_Policies
+Teachers
+TeacherAttendance
+Attendance_Verifications
 Attendance
-Staff_Access
 Classes
+Staff_Access
 School_Calendar
-Academic_Terms
 Audit_Log
+Academic_Terms
 Settings
 ```
-
-Prepare the sheet headers according to the database schema documented below and the header definitions in the source code.
-
-The application also creates or initializes certain supporting sheets when their respective modules are first used.
 
 ### 🔹 Step 8 — Initialize authentication
 
@@ -552,135 +544,57 @@ Check that the sheet names and column headers match the source-code requirements
 
 ## 📊 Google Sheets data model
 
-The application uses Google Sheets as its centralized database.
+The application uses Google Sheets as its centralized database. Below is the exact schema corresponding to the application worksheets and columns:
 
-### 🗂️ Core database sheets
+### 🗂️ Core database sheets & column mappings
 
-| Sheet name | Purpose |
-|---|---|
-| `Students` | Student information and admission details |
-| `Attendance` | Daily student attendance records |
-| `Staff_Access` | Teacher and administrator accounts |
-| `Classes` | Grade and section information |
-| `School_Calendar` | School days, holidays, and special dates |
-| `Academic_Terms` | Academic year and term information |
-| `Audit_Log` | Administrative activity records |
-| `Settings` | Application configuration |
+#### 1. `Students`
+* **Columns:** `Student_ID`, `Admission_No`, `Student_Name`, `Gender`, `Grade`, `Section`, `Class_ID`, `Roll_No`, `Admission_Date`, `Leaving_Date`, `Active`
+* **Purpose:** Stores individual student demographic details, roll numbers, admissions, and active status.
 
-### 📚 A. Students
+#### 2. `Attendance`
+* **Columns:** `Attendance_ID`, `Date`, `Academic_Year`, `Student_ID`, `Admission_No`, `Student_Name`, `Grade`, `Section`, `Class_ID`, `Gender`, `Status`, `Submitted_By`, `Submitted_At`
+* **Purpose:** Central daily student attendance logs (`PRESENT`, `ABSENT`, `LATE`).
 
-Stores the school's student register.
+#### 3. `Staff_Access`
+* **Columns:** `Staff_ID`, `Name`, `Username`, `Role`, `Active`, `PasswordSalt`, `PasswordHash`, `MustChangePassword`, `Created_At`, `Updated_At`
+* **Purpose:** Manages system users (`ADMIN`, `TEACHER`), credentials, and role assignments securely.
 
-The application uses fields including:
+#### 4. `Classes`
+* **Columns:** `Class_ID`, `Grade`, `Section`, `Class_Name`, `Active`
+* **Purpose:** Defines grade-section combinations (e.g., Grade 1 Section A -> `1A`).
 
-- Student ID.
-- Admission number.
-- Student name.
-- Grade.
-- Section.
-- Roll number.
-- Gender.
-- Active status.
-- Admission date.
-- Leaving date.
+#### 5. `TeacherAttendance`
+* **Columns:** `Timestamp`, `Teacher ID`, `Teacher Name`, `Status`, `Leave Type`, `Reason Category`
+* **Purpose:** Logs personal daily teacher self-attendance, half-days, and short leaves.
 
-Student records are retained when students leave the school, allowing historical attendance information to remain available.
+#### 6. `Teacher_Leave_Policies`
+* **Columns:** `Policy_ID`, `Period_Type`, `Custom_Start`, `Custom_End`, `Absence_Limit`, `Short_Leave_Limit`, `Short_Leave_Counting`, `Warning_Percent`, `Exceed_Action`, `Half_Day_Absence_Units`, `Active`, `Updated_By`, `Updated_At`
+* **Purpose:** Governs limits, warnings, and rules for teacher leaves and short-leave policies.
 
-### 📝 B. Attendance
+#### 7. `Attendance_Verifications`
+* **Columns:** `Date`, `Class_ID`, `Verified_By`, `Verified_At`, `Revision`
+* **Purpose:** Tracks administrative approval and verification records for class registers.
 
-Stores daily student attendance.
+#### 8. `School_Calendar`
+* **Columns:** `Date`, `Day_Type`, `Description`, `Academic_Year`, `Updated_By`, `Updated_At`, `Is_School_Day`
+* **Purpose:** Configures school open days, holidays, and closures.
 
-Important fields include:
+#### 9. `Academic_Terms`
+* **Columns:** `Academic_Year`, `Term`, `Start_Date`, `End_Date`, `Updated_By`, `Updated_At`
+* **Purpose:** Defines academic calendar terms and date boundaries.
 
-| Field | Purpose |
-|---|---|
-| Date | Attendance date |
-| Grade | Student grade |
-| Section | Class section |
-| Student_ID | Student identifier |
-| Student_Name | Student name |
-| Status | PRESENT, ABSENT, or LATE |
-| Class_ID | Associated class identifier |
+#### 10. `Audit_Log`
+* **Columns:** `Log_ID`, `Timestamp`, `Action`, `Performed_By`, `Target_Type`, `Target_ID`, `Old_Value`, `New_Value`, `Reason`
+* **Purpose:** Maintains a secure log of administrative corrections and system modifications.
 
-The exact complete header order must be taken from the attendance module's initialization and validation logic.
+#### 11. `Settings`
+* **Columns:** `Setting_Key`, `Setting_Value`
+* **Purpose:** Stores application-wide metadata such as `School_Name` and `School_Address`.
 
-### 🔐 C. Staff_Access
-
-Stores staff authentication information.
-
-| Field | Purpose |
-|---|---|
-| Staff_ID | Unique staff identifier |
-| Name | Staff display name |
-| Username | Login username |
-| Role | ADMIN or TEACHER |
-| Active | Account activation status |
-| PasswordSalt | Individual password salt |
-| PasswordHash | Derived password hash |
-| MustChangePassword | First-login password-change requirement |
-| Created_At | Account creation timestamp |
-| Updated_At | Last account update timestamp |
-
-Plaintext passwords are never intended to be stored in the database.
-
-### 🏫 D. Classes
-
-Stores grade and section information.
-
-The class records are used for:
-
-- Grade and section selection.
-- Attendance eligibility.
-- Class-wise dashboard statistics.
-- Pending attendance tracking.
-
-### 📅 E. School_Calendar
-
-Stores school calendar information.
-
-| Field | Purpose |
-|---|---|
-| Date | Calendar date |
-| Day_Type | Day category |
-| Description | Additional information |
-| Is_School_Day | School-day indicator |
-
-### 📖 F. Academic_Terms
-
-Stores academic-year and term configuration.
-
-| Field | Purpose |
-|---|---|
-| Academic_Year | Academic year |
-| Term | Term name |
-| Start_Date | Term start date |
-| End_Date | Term end date |
-
-### 📋 G. Audit_Log
-
-Stores administrative activity information, including corrections and other logged administrative operations.
-
-The exact events and columns depend on the relevant module implementation.
-
-### ⚙️ H. Settings
-
-Stores application configuration.
-
-The settings sheet should retain the expected headers and configuration values defined by the deployed source code.
-
-### ➕ Supporting sheets
-
-The application also uses additional sheets for specialized functionality:
-
-| Sheet name | Purpose |
-|---|---|
-| `TeacherAttendance` | Teacher daily self-attendance |
-| `Teacher_Leave_Policies` | Configurable teacher leave policies |
-| `Attendance_Verifications` | Class attendance verification records |
-
-These supporting sheets are initialized by their respective modules when required.
-
-> **Important:** Do not rename database tabs or change existing column headers without updating the corresponding server-side code. Use a fictional workbook to validate the schema before deployment.
+#### 12. `Teachers`
+* **Columns:** `Teachers`, `Teacher Name`, `Status`
+* **Purpose:** Supplementary staff tracking and registry tab.
 
 ---
 
@@ -942,7 +856,7 @@ Testing should include invalid inputs, restricted access attempts, and administr
 | Problem | Possible cause | What to check |
 |---|---|---|
 | Database not found | Apps Script is not connected to the spreadsheet | Open Apps Script through the correct spreadsheet |
-| Missing sheet error | Required database tab is unavailable | Verify the exact sheet names |
+| Missing sheet error | Required database tab is unavailable | Verify the exact sheet names (`Students`, `Attendance`, `Staff_Access`, `Classes`, `TeacherAttendance`, `Teacher_Leave_Policies`, `Attendance_Verifications`, `School_Calendar`, `Academic_Terms`, `Audit_Log`, `Settings`, `Teachers`) |
 | Staff_Access headers do not match | Incorrect authentication sheet structure | Compare the ten required headers |
 | Authentication not working | Incorrect account or authentication initialization | Review setup and Script Properties |
 | Session expired | Session reached its expiration time | Sign in again |
